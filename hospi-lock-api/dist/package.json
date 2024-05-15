@@ -1,0 +1,27 @@
+{
+  "name": "hospi-lock-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && copyfiles package.json dist",
+    "start": "npm run build && node dist/app.js",
+    "launch": "ts-node ."
+  },
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "copyfiles": "^2.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "redis": "^4.6.13"
+  }
+}
