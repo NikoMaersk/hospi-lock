@@ -14,9 +14,9 @@ routes.use(bodyParser.json());
 
 routes.post('/users', async (req, res) => {
   const user: User = req.body;
-  const { email, password } = req.body;
+  const { email, password, firstName, lastName } = req.body;
 
-  if (!email || !password) {
+  if (!email || !password || !firstName || !lastName) {
     return res.status(400).send('Missing required fields');
   }
 
@@ -32,6 +32,8 @@ routes.post('/users', async (req, res) => {
 
     await RedisClient.hSet(email, {
       password: password,
+      first_name: firstName,
+      last_name: lastName,
       reg_date: now.toISOString(),
     });
 
