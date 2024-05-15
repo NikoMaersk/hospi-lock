@@ -14,7 +14,8 @@ routes.use(bodyParser.json());
 
 routes.post('/users', async (req, res) => {
   const user: User = req.body;
-  const { email, password, firstName, lastName } = req.body;
+  const email: string = user.email.toLowerCase();
+  const { password, firstName, lastName } = req.body;
 
   if (!email || !password || !firstName || !lastName) {
     return res.status(400).send('Missing required fields');
@@ -45,14 +46,49 @@ routes.post('/users', async (req, res) => {
 });
 
 
-routes.get('/users/:userId', async (req, res) => {
-  const { userId } = req.params;
+routes.get('/users/:email', async (req, res) => {
+  const { email } = req.params;
+  const lowerCaseEmail = email.toLowerCase();
   try {
+    const tempUser = await RedisClient.hGetAll(lowerCaseEmail);
 
+    if (Object.keys(tempUser).length === 0) {
+      return res.status(400).send('No registered user with that email');
+    }
+    
+    const user: User = {
+      email: lowerCaseEmail,
+      password: tempUser.password,
+      firstName: tempUser.first_name,
+      lastName: tempUser.last_name,
+      date: tempUser.reg_date
+    }
+
+    return res.status(200).json(user);
   } catch (error) {
-    const errorMessage = 'Error fetching user id'
-    console.error(errorMessage + ': ', error);
-    res.status(500).send(errorMessage);
+    const errorMessage = 'Error fetching email'
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+routes.get('/users/', async (req, res) => {
+
+  try {
+    const keys = await RedisClient.keys("*");
+    const allHashes: Record<string, User> = {};
+
+    for (const key of keys) {
+      const hashValues = await RedisClient.hGetAll(key);
+      allHashes[key] = hashValues;
+    }
+
+    return res.status(200).json(allHashes);
+  } catch (error) {
+    const errorMessage = 'Error fetching users';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
   }
 });
 
