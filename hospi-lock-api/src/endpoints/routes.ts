@@ -1,8 +1,8 @@
 import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
-import { RedisClient } from '../services/DB.js';
-import { User } from '../models/User.js';
+import { RedisClient } from '../services/database-service.js';
+import { User } from '../models/user.js';
 
 const routes = express();
 
@@ -73,8 +73,38 @@ routes.get('/users/:email', async (req, res) => {
 });
 
 
-routes.get('/users/', async (req, res) => {
+routes.post('/auth', async (req, res) => {
+  const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).send('Missing required fields');
+  }
+
+  try {
+    const tempUser = await RedisClient.hGetAll(email.toLowerCase());
+    const userExists = tempUser && Object.keys(tempUser).length > 0;
+
+    if (!userExists) {
+      return res.status(400).send('No registered user with that email');
+    }
+
+    if (password !== tempUser.password) {
+      return res.status(401).send('Invalid password')
+    }
+
+    
+
+    return res.status(200).send('OK');
+
+  } catch (error) {
+    const errorMessage = 'Internal server error';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+routes.get('/users/', async (req, res) => {
   try {
     const keys = await RedisClient.keys("*");
     const allHashes: Record<string, User> = {};
