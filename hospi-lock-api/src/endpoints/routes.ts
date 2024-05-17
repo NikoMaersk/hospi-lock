@@ -3,6 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { RedisClient } from '../services/database-service.js';
 import { User } from '../models/user.js';
+import LogService from '../services/log_service.js';
 
 const routes = express();
 
@@ -55,7 +56,7 @@ routes.get('/users/:email', async (req, res) => {
     if (Object.keys(tempUser).length === 0) {
       return res.status(400).send('No registered user with that email');
     }
-    
+
     const user: User = {
       email: lowerCaseEmail,
       password: tempUser.password,
@@ -92,8 +93,6 @@ routes.post('/auth', async (req, res) => {
       return res.status(401).send('Invalid password')
     }
 
-    
-
     return res.status(200).send('OK');
 
   } catch (error) {
@@ -123,8 +122,19 @@ routes.get('/users/', async (req, res) => {
 });
 
 
-routes.get('/health', (req, res) => {
-  res.status(200).send('OK');
+routes.get('/health', async (req, res) => {
+  try {
+    const response = await LogService.logMessage('user@example.com', true);
+    if (response.success) {
+      console.log(response.message);
+    } else {
+      console.error(response.error);
+    }
+    res.status(200).send('OK');
+  } catch (error) {
+    console.error('Error handling health check:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 
