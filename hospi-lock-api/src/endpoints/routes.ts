@@ -3,7 +3,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { RedisClient } from '../services/database-service.js';
 import { User } from '../models/user.js';
-import LogService from '../services/log_service.js';
+import LogService from '../services/log-service.js';
+import DrawerLock from '../services/lock-service.js';
 
 const routes = express();
 
@@ -123,19 +124,14 @@ routes.get('/users/', async (req, res) => {
 
 
 routes.get('/health', async (req, res) => {
-  try {
-    const response = await LogService.logMessage('user@example.com', true);
-    if (response.success) {
-      console.log(response.message);
-    } else {
-      console.error(response.error);
-    }
-    res.status(200).send('OK');
-  } catch (error) {
-    console.error('Error handling health check:', error);
-    res.status(500).send('Internal Server Error');
-  }
+  res.status(200).send('OK');
 });
+
+
+routes.post('/test', async (req, res) => {
+  const response = await DrawerLock.unlockAsync();
+  return res.status(200).json(response);
+})
 
 
 routes.get('*', (req, res) => {

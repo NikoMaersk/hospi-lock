@@ -1,4 +1,5 @@
 import { routes } from './endpoints/routes';
+require('dotenv').config()
 
 const port = 3000;
 
