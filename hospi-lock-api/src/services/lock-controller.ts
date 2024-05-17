@@ -1,15 +1,15 @@
 import { ConfigData } from "../../config/config";
 
-export default class DrawerLock {
+export default class LockController {
     private static TEMP_IP = ConfigData.IP;
     private static PORT = ConfigData.PORT;
 
     static async unlockAsync(): Promise<{ success: boolean, message: string}>  {
-        return DrawerLock.requestAsync('unlock');
+        return LockController.requestAsync('unlock');
     }
 
     static async lockAsync(): Promise<{ success: boolean, message: string}> {
-        return DrawerLock.requestAsync('lock');
+        return LockController.requestAsync('lock');
     }
 
     private static async requestAsync(endpoint: string): Promise<{ success: boolean, message: string}> {

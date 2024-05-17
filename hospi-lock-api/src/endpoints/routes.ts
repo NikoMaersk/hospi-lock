@@ -3,8 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { RedisClient } from '../services/database-service.js';
 import { User } from '../models/user.js';
-import LogService from '../services/log-service.js';
-import DrawerLock from '../services/lock-service.js';
+import LockController from '../services/lock-controller.js';
 
 const routes = express();
 
@@ -129,7 +128,7 @@ routes.get('/health', async (req, res) => {
 
 
 routes.post('/test', async (req, res) => {
-  const response = await DrawerLock.unlockAsync();
+  const response = await LockController.unlockAsync();
   return res.status(200).json(response);
 })
 
