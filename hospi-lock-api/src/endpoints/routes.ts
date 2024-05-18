@@ -74,7 +74,7 @@ routes.get('/users/:email', async (req, res) => {
 });
 
 
-routes.post('/auth', async (req, res) => {
+routes.post('/signin', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
