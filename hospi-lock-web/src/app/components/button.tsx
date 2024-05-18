@@ -14,8 +14,9 @@ export const buttonStyles = cva(
                 dark: ["bg-secondary-dark", "hover:bg-secondary-dark-hover", "text-secondary"]
             },
             size: {
-                default: ["rounded", "p-2",],
-                icon: [
+                icon: ["rounded", "p-2"],
+                square: ["rounded-md", "p-2.5", "size-12", "border border-slate-300"],
+                default: [
                     "rounded-full",
                     "size-12",
                     "flex",
@@ -27,7 +28,7 @@ export const buttonStyles = cva(
         },
         defaultVariants: {
             variant: "default",
-            size: "icon"
+            size: "default"
         }
     })
 

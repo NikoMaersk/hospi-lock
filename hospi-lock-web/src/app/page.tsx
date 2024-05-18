@@ -1,4 +1,4 @@
-import AdminComponent from "./layouts/adminComponent";
+import AdminComponent from "./layouts/AdminComponent";
 
 export default function Home() {
   return (
