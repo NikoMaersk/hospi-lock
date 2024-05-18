@@ -10,8 +10,8 @@ export default function Sidebar() {
 
     return (
         <aside
-            className={`sticky top-0 overflow-y-auto scrollbar-hidden pb-4 
-            flex flex-col ml-1 lg:flex"}`}>
+            className={`sticky top-0 overflow-y-auto scrollbar-hidden pb-4 pt-1
+            flex flex-col ml-1 lg:flex`}>
             <SmallsidebarItem Icon={Home} title="Home" url="/" />
             <SmallsidebarItem Icon={User} title="Users" url="/users" />
             <SmallsidebarItem Icon={ScrollText} title="Logs" url="/logs" />

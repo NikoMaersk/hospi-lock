@@ -65,7 +65,7 @@ export default function PageHeader() {
                     <Bell />
                 </Button>
                 <ThemeSwitch />
-                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" className={twMerge(buttonStyles({ variant: "ghost" }), `p-0`)}>
+                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" className={twMerge(buttonStyles({ variant: "ghost" }), `p-0.5 ml-2`)}>
                     <img src="https://randomuser.me/api/portraits/med/women/10.jpg"
                         className="rounded-full size-full" />
                 </a>
