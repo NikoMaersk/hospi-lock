@@ -1,8 +1,7 @@
-import { ConfigData } from "../../config/config";
 
 export default class LockController {
-    private static TEMP_IP = ConfigData.IP;
-    private static PORT = ConfigData.PORT;
+    private static TEMP_IP = "";
+    private static PORT = "";
 
     static async unlockAsync(): Promise<{ success: boolean, message: string}>  {
         return LockController.requestAsync('unlock');
