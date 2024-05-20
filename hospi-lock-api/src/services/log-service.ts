@@ -1,7 +1,7 @@
 const { RedisClient } = require('./database-service')
 
 export default class LogService {
-    static async logMessage(email: string, authenticationStatus: boolean): Promise<{ success: boolean, message?: string, error?: string }> {
+    static async logMessage(email: string, authenticationStatus: boolean, ip: string): Promise<{ success: boolean, message?: string, error?: string }> {
         try {
             const timestamp = Date.now();
             await RedisClient.sendCommand(['SELECT', '1']);
@@ -9,15 +9,18 @@ export default class LogService {
             const logEntry = {
                 timestamp: timestamp.toString(),
                 email: email,
+                ip,
                 success: authenticationStatus
             }
 
+            const logEntrySerialized = JSON.stringify(logEntry);
+
             await RedisClient.zAdd('logs', [
                 {
-                  score: timestamp,
-                  value: `email: ${email} | authenticated: ${authenticationStatus}`
+                    score: timestamp,
+                    value: logEntrySerialized,
                 }
-              ]);
+            ]);
             await RedisClient.sendCommand(['SELECT', '0']);
             return { success: true, message: 'Log added succesfully' };
         } catch (error) {
