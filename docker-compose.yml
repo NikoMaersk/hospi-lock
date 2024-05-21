@@ -9,12 +9,16 @@ services:
     restart: always
     volumes:
       - redis-server-data:/data
+    #  - ./redis.conf:/usr/local/etc/redis/redis.conf
+    #command: redis-server /usr/local/etc/redis/redis.conf
 
   api:
     build: ./hospi-lock-api
     ports:
       - "4000:3000"
     container_name: express-server
+    env_file:
+      - ./hospi-lock-api/.env
     depends_on:
       - redis
     healthcheck:

@@ -14,13 +14,14 @@ export default class LogService {
             }
 
             const logEntrySerialized = JSON.stringify(logEntry);
-
+            
             await RedisClient.zAdd('logs', [
                 {
                     score: timestamp,
                     value: logEntrySerialized,
                 }
             ]);
+
             await RedisClient.sendCommand(['SELECT', '0']);
             return { success: true, message: 'Log added succesfully' };
         } catch (error) {

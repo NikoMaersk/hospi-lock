@@ -1,8 +1,8 @@
 import { ConnectionConfig } from "../config/connectionConfig";
 
 export default class LockController {
-    private static IP = ConnectionConfig.IP;
-    private static PORT = ConnectionConfig.PORT;
+    private static IP = process.env.IP || ConnectionConfig.IP;
+    private static PORT = process.env.PORT || ConnectionConfig.PORT;
 
     static async unlockAsync(): Promise<{ success: boolean, message: string }> {
         return LockController.requestAsync('unlock');
