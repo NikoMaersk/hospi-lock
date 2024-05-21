@@ -6,6 +6,7 @@ import { User } from '../models/user.js';
 import LockController from '../services/lock-controller.js';
 import LogService from '../services/log-service.js';
 import AuthService from '../services/authService.js';
+import { Log } from '../models/log.js';
 
 const routes = express();
 
@@ -116,6 +117,21 @@ routes.post('/unlock/:email', async (req, res) => {
   try {
     const isSuccess = await LockController.unlockAsync();
     return res.status(418).send('OK');
+  } catch (error) {
+    const errorMessage = 'Internal server error';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+routes.get('/logs', async (req, res) => {
+  try {
+    await RedisClient.sendCommand(['SELECT', '1']);
+    const data = await RedisClient.zRange('logs', 0, -1);
+    const deserializedData = JSON.parse(data);
+    await RedisClient.sendCommand(['SELECT', '0']);
+    return res.status(200).json(deserializedData);
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);
