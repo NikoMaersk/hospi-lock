@@ -110,6 +110,20 @@ routes.get('/users/', async (req, res) => {
 });
 
 
+routes.post('/unlock/:email', async (req, res) => {
+  const email = req.params;
+
+  try {
+    const isSuccess = await LockController.unlockAsync();
+    return res.status(418).send('OK');
+  } catch (error) {
+    const errorMessage = 'Internal server error';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
 routes.get('/health', async (req, res) => {
   res.status(200).send('OK');
 });
