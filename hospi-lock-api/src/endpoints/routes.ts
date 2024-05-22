@@ -98,6 +98,7 @@ routes.get('/users', async (req, res) => {
         date: hashValues.reg_date,
         lockId: hashValues.lock_id
       }
+      
       allHashes[key] = tempUser;
     }
 
@@ -129,14 +130,15 @@ routes.post('/signin', async (req, res) => {
 
 // Register a user under a lock
 routes.post('/locks/user', async (req, res) => {
-  const { email, lockId } = req.body;
+  let { email, lockId } = req.body;
+  email = email.toLowerCase();
 
   if (!email || !lockId) {
     return res.status(400).send('Missing required fields');
   }
 
   try {
-    const authResult = await AuthService.VerifyExistence(email);
+    const authResult = await AuthService.CheckUserExistence(email);
 
     if (!authResult.success) {
       return res.status(authResult.statusCode).send(authResult.message);
@@ -165,21 +167,20 @@ routes.post('/locks/user', async (req, res) => {
 
 
 // Get a specific lock with a registered email
-routes.get('/locks/:email', async (req, res) => {
-  const { email } = req.params;
+routes.get('/locks/email/:email', async (req, res) => {
+  let { email } = req.params;
 
   try {
-    const data = await RedisClient.hGetAll(`user:${email}`);
-
-    const authResult = await AuthService.VerifyExistence(email);
-
-    const lock = await RedisClient.hGetAll(`lock:${parseInt(data.lock_id, 10)}`);
-
+    const authResult = await AuthService.CheckUserExistence(email);
+    const user = authResult.user;
+    
     if (!authResult.success) {
       return res.status(authResult.statusCode).send(authResult.message);
     }
+    
+    const lock = await RedisClient.hGetAll(`lock:${parseInt(user.lock_id, 10)}`);
 
-    if (!lock && Object.keys(lock).length === 0) {
+    if (Object.keys(lock).length === 0) {
       return res.status(400).send('No lock registeret with that email');
     }
 
@@ -192,13 +193,13 @@ routes.get('/locks/:email', async (req, res) => {
 
 
 // Get a specific lock with a id
-routes.get('/locks/:id', async (req, res) => {
+routes.get('/locks/id/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
     const lock = await RedisClient.hGetAll(`lock:${parseInt(id, 10)}`);
 
-    if (!lock) {
+    if (Object.keys(lock).length === 0) {
       return res.status(400).send('No lock with that id');
     }
 
@@ -223,7 +224,7 @@ routes.post('/locks', async (req, res) => {
     lockRequest.id = newId.toString();
 
     if (lockRequest.email) {
-      const authResult = await AuthService.VerifyExistence(lockRequest.email);
+      const authResult = await AuthService.CheckUserExistence(lockRequest.email);
 
       if (!authResult.success) {
         return res.status(authResult.statusCode).send(authResult.message);
