@@ -1,4 +1,4 @@
-import { User } from "../models/user";
+import { User } from "../models/User";
 import { RedisClient } from "./database-service";
 
 export default class AuthService {
@@ -15,7 +15,7 @@ export default class AuthService {
                 return { success: false, message: 'Not a valid email', statusCode: 400 };
             }
 
-            const tempUser: User = await RedisClient.hGetAll(email.toLowerCase());
+            const tempUser: User = await RedisClient.hGetAll(`user:${email.toLowerCase()}`);
             const userExists: boolean = tempUser && Object.keys(tempUser).length > 0;
 
             if (!userExists) {
