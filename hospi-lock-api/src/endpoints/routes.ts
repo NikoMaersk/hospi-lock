@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
 import { RedisClient } from '../services/database-service.js';
-import { User } from '../models/User.js';
+import { User } from '../models/user.js';
 import LockController from '../services/lock-controller.js';
 import LogService from '../services/log-service.js';
 import AuthService from '../services/authService.js';
@@ -16,6 +16,7 @@ routes.use(bodyParser.urlencoded({ extended: false }));
 routes.use(bodyParser.json());
 
 
+// Create new user
 routes.post('/users', async (req, res) => {
   const user: User = req.body;
   const email: string = user.email.toLowerCase();
@@ -51,6 +52,7 @@ routes.post('/users', async (req, res) => {
 });
 
 
+// Get specific user with email as parameter
 routes.get('/users/:email', async (req, res) => {
   const { email } = req.params;
   const lowerCaseEmail = email.toLowerCase();
@@ -78,6 +80,7 @@ routes.get('/users/:email', async (req, res) => {
 });
 
 
+// Sign in with user
 routes.post('/signin', async (req, res) => {
   const { email, password } = req.body;
 
@@ -93,13 +96,14 @@ routes.post('/signin', async (req, res) => {
 });
 
 
-routes.get('/users/', async (req, res) => {
+// Get all users
+routes.get('/users', async (req, res) => {
   try {
-    const keys = await RedisClient.keys("*");
+    const keys = await RedisClient.keys("user:*");
     const allHashes: Record<string, User> = {};
 
     for (const key of keys) {
-      const hashValues = await RedisClient.hGetAll(`user:${key}`);
+      const hashValues: User = await RedisClient.hGetAll(`user:${key}`);
       allHashes[key] = hashValues;
     }
 
@@ -112,8 +116,9 @@ routes.get('/users/', async (req, res) => {
 });
 
 
+// Register a user under a lock
 routes.post('/locks/user', async (req, res) => {
-  const { email, lockID: lockId } = req.body;
+  const { email, lockId } = req.body;
 
   if (!email || !lockId) {
     return res.status(400).send('Missing required fields');
@@ -144,6 +149,7 @@ routes.post('/locks/user', async (req, res) => {
 });
 
 
+// Get a specific lock with a registered email
 routes.get('/locks/:email', async (req, res) => {
   const email = req.params;
 
@@ -164,14 +170,26 @@ routes.get('/locks/:email', async (req, res) => {
 });
 
 
+// Get a specific lock with a id
 routes.get('/locks/:id', async (req, res) => {
   const id = req.params;
 
-  return res.status(418).send('OK');
+  try {
+    const lock = await RedisClient.hGetAll(`lock:${id}`);
 
+    if (!lock) {
+      return res.status(400).send('No lock with that id');
+    }
+
+    return res.status(418).send('OK');
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
 });
 
 
+// Post a new lock
 routes.post('/locks', async (req, res) => {
   const lockRequest: RegisterLock = req.body;
 
@@ -196,7 +214,27 @@ routes.post('/locks', async (req, res) => {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
   }
-})
+});
+
+
+// Get all locks
+routes.get('/locks', async (req, res) => {
+  try {
+    const keys = await RedisClient.hGetAll('lock:*')
+
+    const allHashes: Record<string, RegisterLock> = {};
+
+    for (const key of keys) {
+      const hashValues: RegisterLock = await RedisClient.hGetAll(`lock:${key}`);
+      allHashes[key] = hashValues;
+    }
+
+    return res.status(200).json(allHashes);
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+});
 
 
 routes.post('/unlock/:email', async (req, res) => {
