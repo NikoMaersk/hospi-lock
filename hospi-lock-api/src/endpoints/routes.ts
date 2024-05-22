@@ -26,7 +26,7 @@ routes.post('/users', async (req, res) => {
   }
 
   try {
-    const tempUser = await RedisClient.hGetAll(email);
+    const tempUser = await RedisClient.hGetAll(`user:${email}`);
     const userAlreadyExists = tempUser && Object.keys(tempUser).length > 0;
 
     if (userAlreadyExists) {
@@ -51,13 +51,11 @@ routes.post('/users', async (req, res) => {
 });
 
 
-
-
 routes.get('/users/:email', async (req, res) => {
   const { email } = req.params;
   const lowerCaseEmail = email.toLowerCase();
   try {
-    const tempUser = await RedisClient.hGetAll(lowerCaseEmail);
+    const tempUser = await RedisClient.hGetAll(`user:${lowerCaseEmail}`);
 
     if (Object.keys(tempUser).length === 0) {
       return res.status(400).send('No registered user with that email');
@@ -101,7 +99,7 @@ routes.get('/users/', async (req, res) => {
     const allHashes: Record<string, User> = {};
 
     for (const key of keys) {
-      const hashValues = await RedisClient.hGetAll(key);
+      const hashValues = await RedisClient.hGetAll(`user:${key}`);
       allHashes[key] = hashValues;
     }
 
@@ -138,11 +136,39 @@ routes.post('/locks/user', async (req, res) => {
       user_email: email,
     })
 
-    return res.status(201).json({email: email, lockID: lockId});
+    return res.status(201).json({ email: email, lockID: lockId });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
   }
+});
+
+
+routes.get('/locks/:email', async (req, res) => {
+  const email = req.params;
+
+  try {
+    const user: User = await RedisClient.hGetAll(`user:${email}`);
+    const lock: RegisterLock = await RedisClient.hGetAll(`lock:${user.lock}`);
+
+    if (!lock) {
+      return res.status(400).send('No lock registeret with that email');
+    }
+
+    return res.status(200).json(lock);
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+
+});
+
+
+routes.get('/locks/:id', async (req, res) => {
+  const id = req.params;
+
+
+
 });
 
 
@@ -153,7 +179,7 @@ routes.post('/locks', async (req, res) => {
     return res.status(400).send('Missing required fields');
   }
 
-  try {    
+  try {
 
     if (lockRequest.email) {
       const authResult = await AuthService.VerifyExistence(lockRequest.email);

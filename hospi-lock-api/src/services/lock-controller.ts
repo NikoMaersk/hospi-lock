@@ -18,10 +18,11 @@ export default class LockController {
         try {
             const response = await fetch(`http://${LockController.IP}:${LockController.PORT}/${endpoint}`, {
                 method: 'POST',
-                headers: {
+                headers: new Headers({
                     'Content-Type': 'application/json'
-                },
+                })
             });
+
 
             if (!response.ok) {
                 throw new Error('Network response was not ok');
