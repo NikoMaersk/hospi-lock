@@ -35,7 +35,7 @@ routes.post('/users', async (req, res) => {
 
     let now = new Date();
 
-    await RedisClient.hSet(`${user}:email`, {
+    await RedisClient.hSet(`user:${email}`, {
       password: password,
       first_name: firstName,
       last_name: lastName,
