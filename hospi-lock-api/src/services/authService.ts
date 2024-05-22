@@ -1,4 +1,4 @@
-import { User } from "../models/user";
+import { User } from "../models/User";
 import { RedisClient } from "./database-service";
 
 export default class AuthService {

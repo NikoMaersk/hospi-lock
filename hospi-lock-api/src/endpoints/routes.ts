@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
 import { RedisClient } from '../services/database-service.js';
-import { User } from '../models/user.js';
+import { User } from '../models/User.js';
 import LockController from '../services/lock-controller.js';
 import LogService from '../services/log-service.js';
 import AuthService from '../services/authService.js';
