@@ -5,8 +5,9 @@ import { RedisClient } from '../services/database-service.js';
 import { User } from '../models/User.js';
 import LockController from '../services/lock-controller.js';
 import LogService from '../services/log-service.js';
-import AuthService from '../services/authService.js';
+import AuthService from '../services/auth-service.js';
 import RegisterLock from '../models/registerLock.js';
+import UserService from '../services/database/user-service.js';
 
 const routes = express();
 
@@ -19,35 +20,26 @@ routes.use(bodyParser.json());
 // Create new user
 routes.post('/users', async (req, res) => {
   const user: User = req.body;
-  const email: string = user.email.toLowerCase();
-  const { password, firstName, lastName } = req.body;
+  const { email, password, firstName, lastName } = req.body;
 
   if (!email || !password || !firstName || !lastName) {
     return res.status(400).send('Missing required fields');
   }
 
   try {
-    const tempUser = await RedisClient.hGetAll(`user:${email}`);
-    const userAlreadyExists = tempUser && Object.keys(tempUser).length > 0;
+    const addRequest = await UserService.addUserAsync(user);
 
-    if (userAlreadyExists) {
-      return res.status(400).send('User already exists');
+    if (!addRequest.success) {
+      return res.status(addRequest.statusCode).send(addRequest.message);
     }
 
-    let now = new Date();
+    const { password, ...userWithoutPassword } = user;
 
-    await RedisClient.hSet(`user:${email}`, {
-      password: password,
-      first_name: firstName,
-      last_name: lastName,
-      reg_date: now.toISOString(),
-      lock_id: user.lockId || "",
-    });
-
-    return res.status(201).json(user);
+    return res.status(201).json(userWithoutPassword);
   } catch (error) {
-    console.error('Error:', error);
-    return res.status(500).send('A server error occurred');
+    const errorMessage = 'Internal server error'
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
   }
 });
 
@@ -55,26 +47,16 @@ routes.post('/users', async (req, res) => {
 // Get specific user with email as parameter
 routes.get('/users/:email', async (req, res) => {
   const { email } = req.params;
-  const lowerCaseEmail = email.toLowerCase();
   try {
-    const tempUser = await RedisClient.hGetAll(`user:${lowerCaseEmail}`);
+    const dataRequest = await UserService.getUserByEmailAsync(email);
 
-    if (Object.keys(tempUser).length === 0) {
-      return res.status(400).send('No registered user with that email');
+    if (!dataRequest.success) {
+      return res.status(dataRequest.statusCode).send(dataRequest.message);
     }
 
-    const user: User = {
-      email: lowerCaseEmail,
-      password: tempUser.password,
-      firstName: tempUser.first_name,
-      lastName: tempUser.last_name,
-      date: tempUser.reg_date,
-      lockId: tempUser.lock_id || ""
-    }
-
-    return res.status(200).json(user);
+    return res.status(200).json(dataRequest.user);
   } catch (error) {
-    const errorMessage = 'Error fetching email'
+    const errorMessage = 'Internal server error'
     console.error(`${errorMessage} : `, error);
     return res.status(500).send(errorMessage);
   }
@@ -84,25 +66,9 @@ routes.get('/users/:email', async (req, res) => {
 // Get all users
 routes.get('/users', async (req, res) => {
   try {
-    const keys = await RedisClient.keys("user:*");
-    const allHashes: Record<string, User> = {};
+    const userRecords = await UserService.getAllUsersAsync();
 
-    for (const key of keys) {
-      const hashValues = await RedisClient.hGetAll(key);
-
-      const tempUser: User = {
-        email: hashValues.email,
-        password: hashValues.password,
-        firstName: hashValues.first_name,
-        lastName: hashValues.last_name,
-        date: hashValues.reg_date,
-        lockId: hashValues.lock_id
-      }
-      
-      allHashes[key] = tempUser;
-    }
-
-    return res.status(200).json(allHashes);
+    return res.status(200).json(userRecords);
   } catch (error) {
     const errorMessage = 'Error fetching users';
     console.error(`${errorMessage} : `, error);
@@ -173,11 +139,11 @@ routes.get('/locks/email/:email', async (req, res) => {
   try {
     const authResult = await AuthService.CheckUserExistence(email);
     const user = authResult.user;
-    
+
     if (!authResult.success) {
       return res.status(authResult.statusCode).send(authResult.message);
     }
-    
+
     const lock = await RedisClient.hGetAll(`lock:${parseInt(user.lock_id, 10)}`);
 
     if (Object.keys(lock).length === 0) {
