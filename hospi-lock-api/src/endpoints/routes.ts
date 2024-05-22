@@ -2,7 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
 import { RedisClient } from '../services/database-service.js';
-import { User } from '../models/user.js';
+import { User } from '../models/User.js';
 import LockController from '../services/lock-controller.js';
 import LogService from '../services/log-service.js';
 import AuthService from '../services/authService.js';
@@ -41,7 +41,7 @@ routes.post('/users', async (req, res) => {
       first_name: firstName,
       last_name: lastName,
       reg_date: now.toISOString(),
-      lock: user.lock || "",
+      lock_id: user.lockId || "",
     });
 
     return res.status(201).json(user);
@@ -68,12 +68,42 @@ routes.get('/users/:email', async (req, res) => {
       password: tempUser.password,
       firstName: tempUser.first_name,
       lastName: tempUser.last_name,
-      date: tempUser.reg_date
+      date: tempUser.reg_date,
+      lockId: tempUser.lock_id || ""
     }
 
     return res.status(200).json(user);
   } catch (error) {
     const errorMessage = 'Error fetching email'
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+// Get all users
+routes.get('/users', async (req, res) => {
+  try {
+    const keys = await RedisClient.keys("user:*");
+    const allHashes: Record<string, User> = {};
+
+    for (const key of keys) {
+      const hashValues = await RedisClient.hGetAll(`user:${key}`);
+
+      const tempUser: User = {
+        email: hashValues.email,
+        password: hashValues.password,
+        firstName: hashValues.first_name,
+        lastName: hashValues.last_name,
+        date: hashValues.reg_date,
+        lockId: hashValues.lock_id
+      }
+      allHashes[key] = tempUser;
+    }
+
+    return res.status(200).json(allHashes);
+  } catch (error) {
+    const errorMessage = 'Error fetching users';
     console.error(`${errorMessage} : `, error);
     return res.status(500).send(errorMessage);
   }
@@ -95,25 +125,6 @@ routes.post('/signin', async (req, res) => {
   return res.status(authResult.statusCode).send(authResult.message);
 });
 
-
-// Get all users
-routes.get('/users', async (req, res) => {
-  try {
-    const keys = await RedisClient.keys("user:*");
-    const allHashes: Record<string, User> = {};
-
-    for (const key of keys) {
-      const hashValues: User = await RedisClient.hGetAll(`user:${key}`);
-      allHashes[key] = hashValues;
-    }
-
-    return res.status(200).json(allHashes);
-  } catch (error) {
-    const errorMessage = 'Error fetching users';
-    console.error(`${errorMessage} : `, error);
-    return res.status(500).send(errorMessage);
-  }
-});
 
 
 // Register a user under a lock
@@ -139,7 +150,11 @@ routes.post('/locks/user', async (req, res) => {
 
     await RedisClient.hSet(`lock:${lockId}`, {
       user_email: email,
-    })
+    });
+
+    await RedisClient.hSet(`user:${email}`, {
+      lock_id: lockId,
+    });
 
     return res.status(201).json({ email: email, lockID: lockId });
   } catch (error) {
@@ -155,7 +170,7 @@ routes.get('/locks/:email', async (req, res) => {
 
   try {
     const user: User = await RedisClient.hGetAll(`user:${email}`);
-    const lock: RegisterLock = await RedisClient.hGetAll(`lock:${user.lock}`);
+    const lock: RegisterLock = await RedisClient.hGetAll(`lock:${user.lockId}`);
 
     if (!lock) {
       return res.status(400).send('No lock registeret with that email');
@@ -181,7 +196,7 @@ routes.get('/locks/:id', async (req, res) => {
       return res.status(400).send('No lock with that id');
     }
 
-    return res.status(418).send('OK');
+    return res.status(200).send(lock);
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
@@ -225,8 +240,12 @@ routes.get('/locks', async (req, res) => {
     const allHashes: Record<string, RegisterLock> = {};
 
     for (const key of keys) {
-      const hashValues: RegisterLock = await RedisClient.hGetAll(`lock:${key}`);
-      allHashes[key] = hashValues;
+      const hashValues = await RedisClient.hGetAll(`lock:${key}`);
+      const tempLock: RegisterLock = {
+        id: hashValues.id,
+        ip: hashValues.ip,
+      }
+      allHashes[key] = tempLock;
     }
 
     return res.status(200).json(allHashes);

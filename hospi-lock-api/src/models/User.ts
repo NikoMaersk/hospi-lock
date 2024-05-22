@@ -5,5 +5,5 @@ export interface User {
     firstName : string,
     lastName : string,
     date?: string,
-    lock?: number
+    lockId?: number
 }
