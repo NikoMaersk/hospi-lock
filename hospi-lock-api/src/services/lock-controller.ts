@@ -1,8 +1,9 @@
 import { ConnectionConfig } from "../config/connectionConfig";
 
 export default class LockController {
-    private static IP = process.env.IP || ConnectionConfig.IP;
-    private static PORT = process.env.PORT || ConnectionConfig.PORT;
+    private static IP: string = process.env.IP || "10.176.69.22";
+    private static PORT: string = process.env.PORT || "5000";
+
 
     static async unlockAsync(): Promise<{ success: boolean, message: string }> {
         return LockController.requestAsync('unlock');
@@ -14,12 +15,8 @@ export default class LockController {
 
     private static async requestAsync(endpoint: string): Promise<{ success: boolean, message: string }> {
 
-        if (this.IP || this.PORT) {
-            return { success: false, message: 'Could not find connection' }
-        }
-
         try {
-            const response = await fetch(`http://${this.IP}:${this.PORT}/${endpoint}`, {
+            const response = await fetch(`http://${LockController.IP}:${LockController.PORT}/${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

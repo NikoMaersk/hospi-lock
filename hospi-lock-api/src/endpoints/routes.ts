@@ -6,7 +6,7 @@ import { User } from '../models/user.js';
 import LockController from '../services/lock-controller.js';
 import LogService from '../services/log-service.js';
 import AuthService from '../services/authService.js';
-import { Log } from '../models/log.js';
+import RegisterLock from '../models/registerLock.js';
 
 const routes = express();
 
@@ -40,14 +40,17 @@ routes.post('/users', async (req, res) => {
       first_name: firstName,
       last_name: lastName,
       reg_date: now.toISOString(),
+      lock: user.lock || "",
     });
 
-    return res.status(200).json(user);
+    return res.status(201).json(user);
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
   }
 });
+
+
 
 
 routes.get('/users/:email', async (req, res) => {
@@ -111,11 +114,94 @@ routes.get('/users/', async (req, res) => {
 });
 
 
+routes.post('/locks/user', async (req, res) => {
+  const { email, lockID: lockId } = req.body;
+
+  if (!email || !lockId) {
+    return res.status(400).send('Missing required fields');
+  }
+
+  try {
+    const authResult = await AuthService.VerifyExistence(email);
+
+    if (!authResult.success) {
+      return res.status(authResult.statusCode).send(authResult.message);
+    }
+
+    const lock = await RedisClient.hGetAll(`lock:${lockId}`);
+
+    if (Object.keys(lock).length === 0) {
+      return res.status(400).send('No registered lock with that id');
+    }
+
+    await RedisClient.hSet(`lock:${lockId}`, {
+      user_email: email,
+    })
+
+    return res.status(201).json({email: email, lockID: lockId});
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+});
+
+
+routes.post('/locks', async (req, res) => {
+  const lockRequest: RegisterLock = req.body;
+
+  if (!lockRequest || !lockRequest.id || !lockRequest.ip) {
+    return res.status(400).send('Missing required fields');
+  }
+
+  try {    
+
+    if (lockRequest.email) {
+      const authResult = await AuthService.VerifyExistence(lockRequest.email);
+
+      if (!authResult.success) {
+        return res.status(authResult.statusCode).send(authResult.message);
+      }
+    }
+
+    await RedisClient.hSet(`lock:${lockRequest.id}`, lockRequest);
+
+    return res.status(201).send(lockRequest);
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+})
+
+
 routes.post('/unlock/:email', async (req, res) => {
   const email = req.params;
 
   try {
     const isSuccess = await LockController.unlockAsync();
+
+    if (!isSuccess) {
+      return res.status(400).send(isSuccess.message);
+    }
+
+    return res.status(418).send('OK');
+  } catch (error) {
+    const errorMessage = 'Internal server error';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+routes.post('/lock/:email', async (req, res) => {
+  const email = req.params;
+
+  try {
+    const isSuccess = await LockController.lockAsync();
+
+    if (!isSuccess) {
+      return res.status(400).send(isSuccess.message);
+    }
+
     return res.status(418).send('OK');
   } catch (error) {
     const errorMessage = 'Internal server error';
@@ -137,6 +223,11 @@ routes.get('/logs', async (req, res) => {
     console.error(`${errorMessage} : `, error);
     return res.status(500).send(errorMessage);
   }
+});
+
+
+routes.post('/auth', async (req, res) => {
+  res.redirect(302, '/signin');
 });
 
 
