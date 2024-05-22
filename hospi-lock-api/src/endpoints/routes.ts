@@ -214,11 +214,13 @@ routes.get('/locks/:id', async (req, res) => {
 routes.post('/locks', async (req, res) => {
   const lockRequest: RegisterLock = req.body;
 
-  if (!lockRequest || !lockRequest.id || !lockRequest.ip) {
+  if (!lockRequest || !lockRequest.ip) {
     return res.status(400).send('Missing required fields');
   }
 
   try {
+    const newId = await RedisClient.incr('lock_id_counter');
+    lockRequest.id = newId.toString();
 
     if (lockRequest.email) {
       const authResult = await AuthService.VerifyExistence(lockRequest.email);
