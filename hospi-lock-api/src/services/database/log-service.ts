@@ -1,4 +1,4 @@
-const { RedisClient } = require('./database-service')
+import { RedisClient } from "../database-service";
 
 export default class LogService {
     static async logMessage(email: string, authenticationStatus: boolean, ip: string): Promise<{ success: boolean, message?: string, error?: string }> {

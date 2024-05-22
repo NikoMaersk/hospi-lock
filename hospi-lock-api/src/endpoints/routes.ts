@@ -4,10 +4,11 @@ import bodyParser from 'body-parser';
 import { RedisClient } from '../services/database-service.js';
 import { User } from '../models/User.js';
 import LockController from '../services/lock-controller.js';
-import LogService from '../services/log-service.js';
+import LogService from '../services/database/log-service.js';
 import AuthService from '../services/auth-service.js';
-import RegisterLock from '../models/registerLock.js';
+import Lock from '../models/lock.js';
 import UserService from '../services/database/user-service.js';
+import LockService, { LockRequest } from '../services/database/lock-service.js';
 
 const routes = express();
 
@@ -97,32 +98,18 @@ routes.post('/signin', async (req, res) => {
 // Register a user under a lock
 routes.post('/locks/user', async (req, res) => {
   let { email, lockId } = req.body;
-  email = email.toLowerCase();
 
   if (!email || !lockId) {
     return res.status(400).send('Missing required fields');
   }
 
   try {
-    const authResult = await AuthService.CheckUserExistence(email);
+    
+    const lockRequest: LockRequest = await LockService.addLockForUser(email, lockId);
 
-    if (!authResult.success) {
-      return res.status(authResult.statusCode).send(authResult.message);
+    if (!lockRequest.success) {
+      return res.status(lockRequest.statusCode).send(lockRequest.message);
     }
-
-    const lock = await RedisClient.hGetAll(`lock:${parseInt(lockId, 10)}`);
-
-    if (Object.keys(lock).length === 0) {
-      return res.status(400).send('No registered lock with that id');
-    }
-
-    await RedisClient.hSet(`lock:${lockId}`, {
-      user_email: email,
-    });
-
-    await RedisClient.hSet(`user:${email}`, {
-      lock_id: lockId,
-    });
 
     return res.status(201).json({ email: email, lockID: lockId });
   } catch (error) {
@@ -137,20 +124,13 @@ routes.get('/locks/email/:email', async (req, res) => {
   let { email } = req.params;
 
   try {
-    const authResult = await AuthService.CheckUserExistence(email);
-    const user = authResult.user;
+    const lockRequest: LockRequest = await LockService.getLockByEmail(email);
 
-    if (!authResult.success) {
-      return res.status(authResult.statusCode).send(authResult.message);
+    if (!lockRequest.success) {
+      return res.status(lockRequest.statusCode).send(lockRequest.message);
     }
 
-    const lock = await RedisClient.hGetAll(`lock:${parseInt(user.lock_id, 10)}`);
-
-    if (Object.keys(lock).length === 0) {
-      return res.status(400).send('No lock registeret with that email');
-    }
-
-    return res.status(200).json(lock);
+    return res.status(200).json(lockRequest.lock);
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
@@ -163,13 +143,13 @@ routes.get('/locks/id/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const lock = await RedisClient.hGetAll(`lock:${parseInt(id, 10)}`);
+    const lockRequest: LockRequest = await LockService.getLockById(id);
 
-    if (Object.keys(lock).length === 0) {
-      return res.status(400).send('No lock with that id');
+    if (!lockRequest.success) {
+      return res.status(lockRequest.statusCode).send(lockRequest.message);
     }
 
-    return res.status(200).send(lock);
+    return res.status(200).send(lockRequest.lock);
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
@@ -179,27 +159,20 @@ routes.get('/locks/id/:id', async (req, res) => {
 
 // Post a new lock
 routes.post('/locks', async (req, res) => {
-  const lockRequest: RegisterLock = req.body;
+  const lockRequest: Lock = req.body;
 
   if (!lockRequest || !lockRequest.ip) {
     return res.status(400).send('Missing required fields');
   }
 
   try {
-    const newId = await RedisClient.incr('lock_id_counter');
-    lockRequest.id = newId.toString();
+    const addRequest: LockRequest = await LockService.addLock(lockRequest);
 
-    if (lockRequest.email) {
-      const authResult = await AuthService.CheckUserExistence(lockRequest.email);
-
-      if (!authResult.success) {
-        return res.status(authResult.statusCode).send(authResult.message);
-      }
+    if (!addRequest.success) {
+      return res.status(addRequest.statusCode).send(addRequest.message);
     }
 
-    await RedisClient.hSet(`lock:${lockRequest.id}`, lockRequest);
-
-    return res.status(201).send(lockRequest);
+    return res.status(201).json(addRequest.lock);
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
@@ -210,15 +183,9 @@ routes.post('/locks', async (req, res) => {
 // Get all locks
 routes.get('/locks', async (req, res) => {
   try {
-    const keys = await RedisClient.keys('lock:*')
-    const allHashes: Record<string, RegisterLock> = {};
+    const lockRecords = await LockService.getAllLocks();
 
-    for (const key of keys) {
-      const hashValues = await RedisClient.hGetAll(key);
-      allHashes[key] = hashValues;
-    }
-
-    return res.status(200).json(allHashes);
+    return res.status(200).json(lockRecords);
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
