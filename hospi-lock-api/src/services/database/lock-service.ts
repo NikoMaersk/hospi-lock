@@ -97,6 +97,15 @@ export default class LockService {
     }
 
 
+    static async getLockIP(email: string): Promise<string> {
+        const lockRequest: LockRequest = await this.getLockByEmail(email);
+
+        const ip: string = lockRequest?.lock.ip;
+
+        return ip;
+    }
+
+
     static async addLockForUser(email: string, id: string): Promise<LockRequest> {
         const authResult = await AuthService.CheckUserExistence(email);
 

@@ -3,7 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { RedisClient } from '../services/database-service.js';
 import { User } from '../models/User.js';
-import LockController from '../services/lock-controller.js';
+import LockController, { LOCKING } from '../services/lock-controller.js';
 import LogService from '../services/database/log-service.js';
 import AuthService from '../services/auth-service.js';
 import Lock from '../models/lock.js';
@@ -104,14 +104,14 @@ routes.post('/locks/user', async (req, res) => {
   }
 
   try {
-    
+
     const lockRequest: LockRequest = await LockService.addLockForUser(email, id);
 
     if (!lockRequest.success) {
       return res.status(lockRequest.statusCode).send(lockRequest.message);
     }
 
-    return res.status(201).json({ email: email, lockID: id });
+    return res.status(201).json({ email: email, id: id });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
@@ -193,17 +193,17 @@ routes.get('/locks', async (req, res) => {
 });
 
 
-routes.post('/unlock/:email', async (req, res) => {
-  const email = req.params;
+routes.post('/locks/unlock/:email', async (req, res) => {
+  const { email } = req.params;
 
   try {
-    const isSuccess = await LockController.unlockAsync();
+    const isSuccess = await LockController.lockingAsync(email, LOCKING.UNLOCK);
 
     if (!isSuccess) {
       return res.status(400).send(isSuccess.message);
     }
 
-    return res.status(418).send('OK');
+    return res.status(200).send('OK');
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);
@@ -212,17 +212,17 @@ routes.post('/unlock/:email', async (req, res) => {
 });
 
 
-routes.post('/lock/:email', async (req, res) => {
-  const email = req.params;
+routes.post('/locks/lock/:email', async (req, res) => {
+  const { email } = req.params;
 
   try {
-    const isSuccess = await LockController.lockAsync();
+    const isSuccess = await LockController.lockingAsync(email, LOCKING.LOCK);
 
     if (!isSuccess) {
       return res.status(400).send(isSuccess.message);
     }
 
-    return res.status(418).send('OK');
+    return res.status(200).send('OK');
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);
@@ -254,12 +254,6 @@ routes.post('/auth', async (req, res) => {
 routes.get('/health', async (req, res) => {
   res.status(200).send('OK');
 });
-
-
-routes.post('/test', async (req, res) => {
-  const response = await LockController.unlockAsync();
-  return res.status(200).json(response);
-})
 
 
 routes.get('*', (req, res) => {

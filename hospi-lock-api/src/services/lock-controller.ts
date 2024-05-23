@@ -1,22 +1,41 @@
 import { ConnectionConfig } from "../config/connectionConfig";
+import LockService from "./database/lock-service";
+
+
+export enum LOCKING {
+    LOCK,
+    UNLOCK,
+}
 
 export default class LockController {
+
     private static IP: string = process.env.IP || "10.176.69.22";
     private static PORT: string = process.env.PORT || "5000";
 
 
-    static async unlockAsync(): Promise<{ success: boolean, message: string | unknown }> {
-        return LockController.requestAsync('unlock');
+    static async lockingAsync(email: string, lock: LOCKING) {
+        let endpoint: string = '';
+        const IP: string = await LockService.getLockIP(email);
+
+        switch (lock) {
+            case LOCKING.LOCK:
+                endpoint = 'lock';
+                break;
+            case LOCKING.UNLOCK:
+                endpoint = 'unlock';
+                break;
+            default:
+                return;
+        }
+
+        return LockController.requestAsync(IP, endpoint);
     }
 
-    static async lockAsync(): Promise<{ success: boolean, message: string | unknown }> {
-        return LockController.requestAsync('lock');
-    }
 
-    private static async requestAsync(endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
+    private static async requestAsync(IP: string, endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
 
         try {
-            const response = await fetch(`http://${LockController.IP}:${LockController.PORT}/${endpoint}`, {
+            const response = await fetch(`http://${IP}:${LockController.PORT}/${endpoint}`, {
                 method: 'POST',
                 headers: new Headers({
                     'Content-Type': 'application/json'
