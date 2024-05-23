@@ -97,21 +97,21 @@ routes.post('/signin', async (req, res) => {
 
 // Register a user under a lock
 routes.post('/locks/user', async (req, res) => {
-  let { email, lockId } = req.body;
+  let { email, id } = req.body;
 
-  if (!email || !lockId) {
+  if (!email || !id) {
     return res.status(400).send('Missing required fields');
   }
 
   try {
     
-    const lockRequest: LockRequest = await LockService.addLockForUser(email, lockId);
+    const lockRequest: LockRequest = await LockService.addLockForUser(email, id);
 
     if (!lockRequest.success) {
       return res.status(lockRequest.statusCode).send(lockRequest.message);
     }
 
-    return res.status(201).json({ email: email, lockID: lockId });
+    return res.status(201).json({ email: email, lockID: id });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');

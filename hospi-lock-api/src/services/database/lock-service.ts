@@ -97,7 +97,7 @@ export default class LockService {
     }
 
 
-    static async addLockForUser(email: string, lockId: string): Promise<LockRequest> {
+    static async addLockForUser(email: string, id: string): Promise<LockRequest> {
         const authResult = await AuthService.CheckUserExistence(email);
 
         if (!authResult.success) {
@@ -106,10 +106,9 @@ export default class LockService {
                 message: authResult.message,
                 statusCode: authResult.statusCode
             }
-
         }
 
-        const lock: Lock = await RedisClient.hGetAll(`lock:${lockId}`);
+        const lock: Lock = await RedisClient.hGetAll(`lock:${id}`);
 
         if (Object.keys(lock).length === 0) {
             return { success: false, message: 'No registered lock with that id', statusCode: 400 };
@@ -123,12 +122,12 @@ export default class LockService {
             return { success: false, message: 'User already have a registered lock', statusCode: 409 };
         }
 
-        await RedisClient.hSet(`lock:${lockId}`, {
-            user_email: email,
+        await RedisClient.hSet(`lock:${id}`, {
+            email: email,
         });
 
         await RedisClient.hSet(`user:${email}`, {
-            lock_id: lockId,
+            lock_id: id,
         });
 
         return { success: true, message: 'User registeret for the specified lock', statusCode: 201 };
