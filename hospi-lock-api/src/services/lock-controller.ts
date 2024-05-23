@@ -1,6 +1,4 @@
-import { ConnectionConfig } from "../config/connectionConfig";
 import LockService from "./database/lock-service";
-
 
 export enum LOCKING {
     LOCK,

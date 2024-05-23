@@ -88,7 +88,7 @@ routes.post('/signin', async (req, res) => {
 
   const logSuccess = await LogService.logMessage(email, authResult.success, ipAddress);
 
-  console.log(`log success: ${logSuccess.success}, message: ${logSuccess.message || logSuccess.error}`);
+  console.log(`log success: ${logSuccess.success}, message: ${logSuccess.message}`);
 
   return res.status(authResult.statusCode).send(authResult.message);
 });
@@ -233,10 +233,7 @@ routes.post('/locks/lock/:email', async (req, res) => {
 
 routes.get('/logs', async (req, res) => {
   try {
-    await RedisClient.sendCommand(['SELECT', '1']);
-    const data = await RedisClient.zRange('logs', 0, -1);
-    const deserializedData = JSON.parse(data);
-    await RedisClient.sendCommand(['SELECT', '0']);
+    const deserializedData = await LogService.getAllLogs();
     return res.status(200).json(deserializedData);
   } catch (error) {
     const errorMessage = 'Internal server error';
