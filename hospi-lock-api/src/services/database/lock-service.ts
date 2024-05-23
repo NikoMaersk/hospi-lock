@@ -99,8 +99,11 @@ export default class LockService {
 
     static async getLockIP(email: string): Promise<string> {
         const lockRequest: LockRequest = await this.getLockByEmail(email);
+        let ip: string = "";
 
-        const ip: string = lockRequest?.lock.ip;
+        if (lockRequest.success) {
+            ip = lockRequest.lock.ip;
+        }
 
         return ip;
     }
