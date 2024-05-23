@@ -13,9 +13,14 @@ export default class LockController {
     private static PORT: string = process.env.PORT || "5000";
 
 
-    static async lockingAsync(email: string, lock: LOCKING) {
-        let endpoint: string = '';
+    static async lockingAsync(email: string, lock: LOCKING): Promise<{ success: boolean, message: string | unknown }> {
         const IP: string = await LockService.getLockIP(email);
+
+        if (!IP || IP.trim() === "") {
+            return { success: false, message: "Could not get ip" }
+        }
+
+        let endpoint: string = '';
 
         switch (lock) {
             case LOCKING.LOCK:
