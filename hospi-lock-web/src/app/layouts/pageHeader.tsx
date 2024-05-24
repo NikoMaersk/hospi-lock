@@ -6,7 +6,7 @@ import React, { useRef, useState } from 'react';
 import { twMerge } from "tailwind-merge";
 import logo from "../assets/Logo.png"
 import Image from "next/image";
-import ThemeSwitch from "../components/Themeswitch";
+import ThemeSwitch from "../components/ThemeSwitch";
 
 export default function PageHeader() {
     const inputRef = useRef<HTMLInputElement>(null);

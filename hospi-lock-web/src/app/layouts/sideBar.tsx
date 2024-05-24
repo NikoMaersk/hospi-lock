@@ -3,7 +3,7 @@
 import { ElementType } from "react";
 import { twMerge } from "tailwind-merge";
 import { buttonStyles } from "../components/Button";
-import { Home, LineChart, ScrollText, User } from "lucide-react";
+import { Home, LineChart, LockOpen, ScrollText, User } from "lucide-react";
 
 
 export default function Sidebar() {
@@ -15,6 +15,7 @@ export default function Sidebar() {
             <SmallsidebarItem Icon={Home} title="Home" url="/" />
             <SmallsidebarItem Icon={User} title="Users" url="/users" />
             <SmallsidebarItem Icon={ScrollText} title="Logs" url="/logs" />
+            <SmallsidebarItem Icon={LockOpen} title="Locks" url="/locks" />
             <SmallsidebarItem Icon={LineChart} title="Analytics" url="/analytics" />
         </aside>
     );
