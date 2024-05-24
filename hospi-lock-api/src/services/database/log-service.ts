@@ -8,7 +8,7 @@ export interface LogRequest {
 }
 
 export default class LogService {
-    static async logMessage(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
+    static async logMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
         try {
             const timestamp = Date.now();
             await RedisClient.sendCommand(['SELECT', '1']);
@@ -40,7 +40,7 @@ export default class LogService {
     }
 
 
-    static async getAllLogs(): Promise<Log[]> {
+    static async getAllLogsAsync(): Promise<Log[]> {
 
         try {
             await RedisClient.sendCommand(['SELECT', '1']);

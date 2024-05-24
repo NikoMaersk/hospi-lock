@@ -5,11 +5,11 @@ import { UserRequest } from "./database/user-service";
 export default class AuthService {
 
 
-    static async Authentication(email: string, password: string): Promise<UserRequest> {
+    static async AuthenticationAsync(email: string, password: string): Promise<UserRequest> {
 
         try {
 
-            const verifyUser = await AuthService.CheckUserExistence(email);
+            const verifyUser = await AuthService.CheckUserExistenceAsync(email);
 
             if (!verifyUser.success) {
                 return { success: verifyUser.success, message: verifyUser.message, statusCode: verifyUser.statusCode };
@@ -30,7 +30,7 @@ export default class AuthService {
     }
 
 
-    static async CheckUserExistence(email: string): Promise<UserRequest> {
+    static async CheckUserExistenceAsync(email: string): Promise<UserRequest> {
         try {
             if (!email) {
                 return { success: false, message: 'Missing required field', statusCode: 400 };

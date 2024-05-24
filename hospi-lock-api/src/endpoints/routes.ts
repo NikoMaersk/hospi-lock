@@ -78,6 +78,27 @@ routes.get('/users', async (req, res) => {
 });
 
 
+// Patch user password
+routes.patch('/users/:email/password', async (req, res) => {
+  const { email } = req.params;
+  const { password } = req.body;
+
+  try {
+    const patchRequest = await UserService.patchPasswordAsync(email, password);
+
+    if (!patchRequest.success) {
+      return res.status(patchRequest.statusCode).send(patchRequest.message);
+    }
+
+    return res.status(200).send('Password successfully changed');
+  } catch (error) {
+    const errorMessage = 'Internal server error'
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
 // Sign in with user
 routes.post('/signin', async (req, res) => {
   const { email, password } = req.body;
@@ -85,9 +106,9 @@ routes.post('/signin', async (req, res) => {
   try {
     const ipAddress: string = req.headers['x-forwarded-for']?.[0] || req.socket.remoteAddress || "unknown";
 
-    const authResult = await AuthService.Authentication(email, password);
+    const authResult = await AuthService.AuthenticationAsync(email, password);
 
-    const logSuccess = await LogService.logMessage(email, authResult.success, ipAddress);
+    const logSuccess = await LogService.logMessageAsync(email, authResult.success, ipAddress);
 
     console.log(`log success: ${logSuccess.success}, message: ${logSuccess.message}`);
 
@@ -110,7 +131,7 @@ routes.post('/locks/user', async (req, res) => {
 
   try {
 
-    const lockRequest: LockRequest = await LockService.addLockForUser(email, id);
+    const lockRequest: LockRequest = await LockService.addLockForUserAsync(email, id);
 
     if (!lockRequest.success) {
       return res.status(lockRequest.statusCode).send(lockRequest.message);
@@ -148,7 +169,7 @@ routes.get('/locks/id/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const lockRequest: LockRequest = await LockService.getLockById(id);
+    const lockRequest: LockRequest = await LockService.getLockByIdAsync(id);
 
     if (!lockRequest.success) {
       return res.status(lockRequest.statusCode).send(lockRequest.message);
@@ -166,7 +187,7 @@ routes.get('/locks/status/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const statusRequest = await LockService.getLockStatus(id);
+    const statusRequest = await LockService.getLockStatusAsync(id);
 
     if (!statusRequest.success) {
       return res.status(statusRequest.statusCode).send(statusRequest.message);
@@ -189,7 +210,7 @@ routes.post('/locks', async (req, res) => {
   }
 
   try {
-    const addRequest: LockRequest = await LockService.addLock(lockRequest);
+    const addRequest: LockRequest = await LockService.addLockAsync(lockRequest);
 
     if (!addRequest.success) {
       return res.status(addRequest.statusCode).send(addRequest.message);
@@ -206,7 +227,7 @@ routes.post('/locks', async (req, res) => {
 // Get all locks
 routes.get('/locks', async (req, res) => {
   try {
-    const lockRecords = await LockService.getAllLocks();
+    const lockRecords = await LockService.getAllLocksAsync();
 
     return res.status(200).json(lockRecords);
   } catch (error) {
@@ -256,7 +277,7 @@ routes.post('/locks/lock/:email', async (req, res) => {
 
 routes.get('/logs', async (req, res) => {
   try {
-    const deserializedData = await LogService.getAllLogs();
+    const deserializedData = await LogService.getAllLogsAsync();
     return res.status(200).json(deserializedData);
   } catch (error) {
     const errorMessage = 'Internal server error';

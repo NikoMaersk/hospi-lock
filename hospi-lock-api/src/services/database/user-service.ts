@@ -65,7 +65,7 @@ export default class UserService {
         const userAlreadyExists = tempUser && Object.keys(tempUser).length > 0;
 
         if (userAlreadyExists) {
-            return { success: false, message: 'User already exists', statusCode: 409 }; // Changed status code to 409 Conflict
+            return { success: false, message: 'User already exists', statusCode: 409 };
         }
 
         let now = new Date();
@@ -80,5 +80,21 @@ export default class UserService {
         });
 
         return { success: true, message: 'User created', statusCode: 201 };
+    }
+
+
+    static async patchPasswordAsync(email: string, newPassword: string): Promise<UserRequest> {
+        
+        const getUserRequest: UserRequest = await this.getUserByEmailAsync(email);
+
+        if (!getUserRequest.success) {
+            return getUserRequest;
+        }
+
+        const tempUser = getUserRequest.user;
+
+        await RedisClient.hSet(`user:${tempUser.email}`, 'password', newPassword);
+
+        return getUserRequest;
     }
 }

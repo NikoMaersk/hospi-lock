@@ -35,7 +35,7 @@ export default class LockController {
         const postRequest = await LockController.requestAsync(IP, endpoint);
 
         if (postRequest.success) {
-            await LockService.setStatus(lockRequest.lock, !lockRequest.lock.status);
+            await LockService.setStatusAsync(lockRequest.lock, !lockRequest.lock.status);
         }
 
         return postRequest;
