@@ -103,15 +103,16 @@ export default class LockService {
     }
 
 
-    static async getLockStatus(id: string): Promise<{ success: boolean, message: string, statusCode: number, lockStatus?: number }> {
+    static async getLockStatus(id: string): Promise<{ success: boolean, message: string, statusCode: number, lockStatus?: boolean }> {
         const lockRequest: LockRequest = await this.getLockById(id);
 
         if (!lockRequest.success) {
             return { success: lockRequest.success, message: lockRequest.message, statusCode: lockRequest.statusCode }
         }
 
-        return { success: true, message: lockRequest.message, statusCode: lockRequest.statusCode, lockStatus: lockRequest.lock.status }
+        const statusAsBool = !!lockRequest.lock.status
 
+        return { success: true, message: lockRequest.message, statusCode: lockRequest.statusCode, lockStatus: statusAsBool }
     }
 
 

@@ -166,18 +166,17 @@ routes.get('/locks/status/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const lockStatus = await LockService.getLockStatus(id);
+    const statusRequest = await LockService.getLockStatus(id);
 
-    if (!lockStatus.success) {
-      return res.status(lockStatus.statusCode).send(lockStatus.message);
+    if (!statusRequest.success) {
+      return res.status(statusRequest.statusCode).send(statusRequest.message);
     }
 
-    return res.status(200).json(lockStatus.lockStatus);
+    return res.status(200).json({ id: id, status: statusRequest.lockStatus });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
   }
-
 });
 
 
