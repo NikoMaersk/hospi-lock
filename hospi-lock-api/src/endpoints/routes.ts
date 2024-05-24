@@ -82,15 +82,20 @@ routes.get('/users', async (req, res) => {
 routes.post('/signin', async (req, res) => {
   const { email, password } = req.body;
 
-  const ipAddress: string = req.headers['x-forwarded-for']?.[0] || req.socket.remoteAddress || "unknown";
+  try {
+    const ipAddress: string = req.headers['x-forwarded-for']?.[0] || req.socket.remoteAddress || "unknown";
 
-  const authResult = await AuthService.Authentication(email, password);
+    const authResult = await AuthService.Authentication(email, password);
 
-  const logSuccess = await LogService.logMessage(email, authResult.success, ipAddress);
+    const logSuccess = await LogService.logMessage(email, authResult.success, ipAddress);
 
-  console.log(`log success: ${logSuccess.success}, message: ${logSuccess.message}`);
+    console.log(`log success: ${logSuccess.success}, message: ${logSuccess.message}`);
 
-  return res.status(authResult.statusCode).send(authResult.message);
+    return res.status(authResult.statusCode).send(authResult.message);
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
 });
 
 
@@ -154,6 +159,25 @@ routes.get('/locks/id/:id', async (req, res) => {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
   }
+});
+
+
+routes.get('/locks/status/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const lockStatus = await LockService.getLockStatus(id);
+
+    if (!lockStatus.success) {
+      return res.status(lockStatus.statusCode).send(lockStatus.message);
+    }
+
+    return res.status(200).json(lockStatus.lockStatus);
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+
 });
 
 

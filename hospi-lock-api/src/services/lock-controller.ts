@@ -1,4 +1,4 @@
-import LockService from "./database/lock-service";
+import LockService, { LockRequest } from "./database/lock-service";
 
 export enum LOCKING {
     LOCK,
@@ -12,7 +12,8 @@ export default class LockController {
 
 
     static async lockingAsync(email: string, lock: LOCKING): Promise<{ success: boolean, message: string | unknown }> {
-        const IP: string = await LockService.getLockIP(email);
+        const lockRequest: LockRequest = await LockService.getLockByEmail(email);
+        const IP: string = lockRequest.lock.ip;
 
         if (!IP || IP.trim() === "") {
             return { success: false, message: "Could not get ip" }
@@ -31,7 +32,13 @@ export default class LockController {
                 return;
         }
 
-        return LockController.requestAsync(IP, endpoint);
+        const postRequest = await LockController.requestAsync(IP, endpoint);
+
+        if (postRequest.success) {
+            await LockService.setStatus(lockRequest.lock, !lockRequest.lock.status);
+        }
+
+        return postRequest;
     }
 
 

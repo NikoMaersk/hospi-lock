@@ -26,12 +26,17 @@ export default class LockService {
             }
         }
 
-        const newId = await RedisClient.incr('lock_id_counter');
-        lock.id = newId.toString();
+        try {
+            const newId = await RedisClient.incr('lock_id_counter');
+            lock.id = newId.toString();
+            lock.status = 0;
 
-        await RedisClient.hSet(`lock:${lock.id}`, lock);
+            await RedisClient.hSet(`lock:${lock.id}`, lock);
 
-        return { success: true, message: "Lock registered", statusCode: 201, lock: lock };
+            return { success: true, message: 'Lock registered', statusCode: 201, lock: lock };
+        } catch (error) {
+            return { success: false, message: 'Internal server error', statusCode: 500 }
+        }
     }
 
 
@@ -46,6 +51,7 @@ export default class LockService {
                 const tempLock: Lock = {
                     id: hashValues.id,
                     ip: hashValues.ip,
+                    status: hashValues.status,
                     email: hashValues.email
                 };
 
@@ -97,11 +103,23 @@ export default class LockService {
     }
 
 
+    static async getLockStatus(id: string): Promise<{ success: boolean, message: string, statusCode: number, lockStatus?: number }> {
+        const lockRequest: LockRequest = await this.getLockById(id);
+
+        if (!lockRequest.success) {
+            return { success: lockRequest.success, message: lockRequest.message, statusCode: lockRequest.statusCode }
+        }
+
+        return { success: true, message: lockRequest.message, statusCode: lockRequest.statusCode, lockStatus: lockRequest.lock.status }
+
+    }
+
+
     static async getLockIP(email: string): Promise<string> {
         const lockRequest: LockRequest = await this.getLockByEmail(email);
         let ip: string = "";
 
-        if (lockRequest.success) {
+        if (!lockRequest.success) {
             ip = lockRequest.lock.ip;
         }
 
@@ -143,5 +161,21 @@ export default class LockService {
         });
 
         return { success: true, message: 'User registeret for the specified lock', statusCode: 201 };
+    }
+
+
+    static async setStatus(lock: Lock, status: boolean): Promise<{ success: boolean, message: string, statusCode: number }> {
+        try {
+
+            const newStatus = status ? 1 : 0;
+
+            lock.status = newStatus;
+
+            await RedisClient.hSet(`lock:${lock.id}`, lock);
+
+            return { success: true, message: 'Lock registered', statusCode: 201 };
+        } catch (error) {
+            return { success: false, message: 'Internal server error', statusCode: 500 }
+        }
     }
 }
