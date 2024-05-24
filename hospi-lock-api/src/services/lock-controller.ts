@@ -1,3 +1,4 @@
+import Lock from "../models/lock";
 import LockService, { LockRequest } from "./database/lock-service";
 
 export enum LOCKING {
@@ -13,7 +14,13 @@ export default class LockController {
 
     static async lockingAsync(email: string, lock: LOCKING): Promise<{ success: boolean, message: string | unknown }> {
         const lockRequest: LockRequest = await LockService.getLockByEmail(email);
-        const IP: string = lockRequest.lock.ip;
+        const tempLock: Lock = lockRequest.lock;
+        
+        if (!tempLock) {
+            return { success: false, message: 'Could not get associated lock'}
+        }
+        
+        const IP: string = tempLock.ip;
 
         if (!IP || IP.trim() === "") {
             return { success: false, message: "Could not get ip" }
