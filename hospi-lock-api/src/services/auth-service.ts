@@ -1,72 +1,112 @@
 import { User } from "../models/User";
-import { RedisClient } from "./database-service";
-import { UserRequest } from "./database/user-service";
+import Admin from "../models/admin";
+import { RedisClientDb0, RedisClientDb1 } from "./database-service";
+import { AdminRequest } from "../models/admin";
+import { UserRequest } from "../models/User";
+
+
+export enum Role {
+    USER,
+    ADMIN,
+}
+
 
 export default class AuthService {
 
 
-    static async AuthenticationAsync(email: string, password: string): Promise<UserRequest> {
+    static async AuthenticationAsync(email: string, password: string, role: Role): Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
 
         try {
+            const verifyResult = await AuthService.CheckExistenceAsync(email, role);
 
-            const verifyUser = await AuthService.CheckUserExistenceAsync(email);
-
-            if (!verifyUser.success) {
-                return { success: verifyUser.success, message: verifyUser.message, statusCode: verifyUser.statusCode };
+            if (!verifyResult.success) {
+                return { success: verifyResult.success, message: verifyResult.message, statusCode: verifyResult.statusCode };
             }
 
-            const tempUser: User = verifyUser.user;
+            const tempRole: User | Admin = verifyResult.user;
 
-            if (password !== tempUser.password) {
+            if (password !== tempRole.password) {
                 return { success: false, message: 'Invalid password', statusCode: 401 };
             }
 
-            return { success: true, message: 'OK', statusCode: 200, user: tempUser };
+            return { success: true, message: 'OK', statusCode: 200, role: tempRole };
 
         } catch (error) {
             console.error('Internal server error: ', error);
             return { success: false, message: 'Internal server error', statusCode: 500 };
         }
+    }
+
+
+    static async CheckExistenceAsync(email: string, role: Role) {
+
+        if (!email) {
+            return { success: false, message: 'Missing required field', statusCode: 400 };
+        }
+
+        if (!this.EmailValidator(email)) {
+            return { success: false, message: 'Not a valid email', statusCode: 400 };
+        }
+
+        let result;
+
+        switch (role) {
+            case Role.USER:
+                result = await this.CheckUserExistenceAsync(email);
+                break;
+            case Role.ADMIN:
+                result = await this.CheckAdminExistenceAsync(email);
+                break;
+            default:
+                result = { success: false, message: 'Missing role', statusCode: 500 };
+        }
+
+        return result;
     }
 
 
     static async CheckUserExistenceAsync(email: string): Promise<UserRequest> {
-        try {
-            if (!email) {
-                return { success: false, message: 'Missing required field', statusCode: 400 };
-            }
 
-            if (!AuthService.EmailValidator(email)) {
-                return { success: false, message: 'Not a valid email', statusCode: 400 };
-            }
+        const tempUser = await RedisClientDb0.hGetAll(`user:${email.toLowerCase()}`);
+        const userExists: boolean = tempUser && Object.keys(tempUser).length > 0;
 
-            const tempUser = await RedisClient.hGetAll(`user:${email.toLowerCase()}`);
-            const userExists: boolean = tempUser && Object.keys(tempUser).length > 0;
-
-            if (!userExists) {
-                return { success: false, message: 'No registered user with that email', statusCode: 400 };
-            }
-
-            const user: User = {
-                email: tempUser.email,
-                password: tempUser.password,
-                firstName: tempUser.first_name,
-                lastName: tempUser.last_name,
-                date: tempUser.reg_date,
-                lockId: tempUser.lock_id
-            }
-
-            return { success: true, message: 'OK', statusCode: 200, user: user };
-
-        } catch (error) {
-            console.error('Internal server error: ', error);
-            return { success: false, message: 'Internal server error', statusCode: 500 };
+        if (!userExists) {
+            return { success: false, message: 'No registered user with that email', statusCode: 400 };
         }
+
+        const user: User = {
+            email: tempUser.email,
+            password: tempUser.password,
+            firstName: tempUser.first_name,
+            lastName: tempUser.last_name,
+            date: tempUser.reg_date,
+            lockId: tempUser.lock_id
+        }
+
+        return { success: true, message: 'OK', statusCode: 200, user: user };
+    }
+
+
+    static async CheckAdminExistenceAsync(email: string): Promise<AdminRequest> {
+        const tempAdmin = await RedisClientDb1.hGetAll(`admin:${email}`);
+
+        const adminExists: boolean = tempAdmin && Object.keys(tempAdmin).length > 0;
+
+        if (!adminExists) {
+            return { success: false, message: 'No registered admin with that email', statusCode: 400 };
+        }
+
+        const admin: Admin = {
+            email: tempAdmin.email,
+            password: tempAdmin.password,
+        }
+
+        return { success: true, message: 'OK', statusCode: 200, admin: admin };
     }
 
 
     static EmailValidator(email: string) {
-        const pattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const pattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,3}$/;
         return pattern.test(email);
     }
 }

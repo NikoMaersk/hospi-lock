@@ -7,3 +7,11 @@ export interface User {
     date?: string,
     lockId?: number
 }
+
+
+export interface UserRequest {
+    success: boolean,
+    message: string,
+    statusCode: number,
+    user?: User
+}

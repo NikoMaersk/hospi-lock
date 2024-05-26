@@ -1,5 +1,5 @@
 import { Log } from "../../models/log";
-import { RedisClient } from "../database-service";
+import { RedisClientDb1 } from "../database-service";
 
 export interface LogRequest {
     success: boolean,
@@ -11,7 +11,6 @@ export default class LogService {
     static async logMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
         try {
             const timestamp = Date.now();
-            await RedisClient.sendCommand(['SELECT', '1']);
 
             const parsedIp = this.parseIPAddress(ip);
 
@@ -24,14 +23,13 @@ export default class LogService {
 
             const logEntrySerialized = JSON.stringify(logEntry);
 
-            await RedisClient.zAdd('logs', [
+            await RedisClientDb1.zAdd('logs', [
                 {
                     score: timestamp,
                     value: logEntrySerialized,
                 }
             ]);
 
-            await RedisClient.sendCommand(['SELECT', '0']);
             return { success: true, message: 'Log added succesfully' };
         } catch (error) {
             console.error('Error logging message: ', error);
@@ -43,8 +41,7 @@ export default class LogService {
     static async getAllLogsAsync(): Promise<Log[]> {
 
         try {
-            await RedisClient.sendCommand(['SELECT', '1']);
-            const data = await RedisClient.zRange('logs', 0, -1);
+            const data = await RedisClientDb1.zRange('logs', 0, -1);
 
             const deserializedData: Log[] = data.map(item => {
                 const parsedItem = JSON.parse(item);
@@ -55,8 +52,6 @@ export default class LogService {
                     success: parsedItem.success
                 };
             });
-
-            await RedisClient.sendCommand(['SELECT', '0']);
 
             return deserializedData;
         } catch (error) {

@@ -1,17 +1,10 @@
-import { RedisClient } from "../database-service";
-import { User } from "../../models/User";
-
-export interface UserRequest {
-    success: boolean,
-    message: string,
-    statusCode: number,
-    user?: User
-}
+import { RedisClientDb0 } from "../database-service";
+import { User, UserRequest } from "../../models/User";
 
 export default class UserService {
     static async getUserByEmailAsync(email: string): Promise<UserRequest> {
         const lowerCaseEmail = email.toLowerCase();
-        const tempUser = await RedisClient.hGetAll(`user:${lowerCaseEmail}`);
+        const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
 
         if (Object.keys(tempUser).length === 0) {
             return { success: false, message: 'No registered user with that email', statusCode: 400 }
@@ -31,11 +24,11 @@ export default class UserService {
 
     static async getAllUsersAsync(): Promise<Record<string, User>> {
         try {
-            const keys = await RedisClient.keys("user:*");
+            const keys = await RedisClientDb0.keys("user:*");
             const allHashes: Record<string, User> = {};
 
             const promises = keys.map(async (key) => {
-                const hashValues = await RedisClient.hGetAll(key);
+                const hashValues = await RedisClientDb0.hGetAll(key);
 
                 const tempUser: User = {
                     email: hashValues.email,
@@ -60,7 +53,7 @@ export default class UserService {
 
     static async addUserAsync(user: User): Promise<UserRequest> {
         const lowerCaseEmail = user.email.toLowerCase();
-        const tempUser = await RedisClient.hGetAll(`user:${lowerCaseEmail}`);
+        const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
 
         const userAlreadyExists = tempUser && Object.keys(tempUser).length > 0;
 
@@ -70,7 +63,7 @@ export default class UserService {
 
         let now = new Date();
 
-        await RedisClient.hSet(`user:${lowerCaseEmail}`, {
+        await RedisClientDb0.hSet(`user:${lowerCaseEmail}`, {
             email: lowerCaseEmail,
             password: user.password,
             first_name: user.firstName,
@@ -93,7 +86,7 @@ export default class UserService {
 
         const tempUser = getUserRequest.user;
 
-        await RedisClient.hSet(`user:${tempUser.email}`, 'password', newPassword);
+        await RedisClientDb0.hSet(`user:${tempUser.email}`, 'password', newPassword);
 
         return getUserRequest;
     }

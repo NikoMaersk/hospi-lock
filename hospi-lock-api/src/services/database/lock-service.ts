@@ -1,4 +1,4 @@
-import { RedisClient } from "../database-service";
+import { RedisClientDb0 } from "../database-service";
 import Lock from "../../models/lock";
 import AuthService from "../auth-service";
 
@@ -27,11 +27,11 @@ export default class LockService {
         }
 
         try {
-            const newId = await RedisClient.incr('lock_id_counter');
+            const newId = await RedisClientDb0.incr('lock_id_counter');
             lock.id = newId.toString();
             lock.status = 0;
 
-            await RedisClient.hSet(`lock:${lock.id}`, lock);
+            await RedisClientDb0.hSet(`lock:${lock.id}`, lock);
 
             return { success: true, message: 'Lock registered', statusCode: 201, lock: lock };
         } catch (error) {
@@ -42,11 +42,11 @@ export default class LockService {
 
     static async getAllLocksAsync(): Promise<Record<string, Lock>> {
         try {
-            const keys = await RedisClient.keys('lock:*')
+            const keys = await RedisClientDb0.keys('lock:*')
             const allHashes: Record<string, Lock> = {};
 
             const promises = keys.map(async (key) => {
-                const hashValues = await RedisClient.hGetAll(key);
+                const hashValues = await RedisClientDb0.hGetAll(key);
 
                 const tempLock: Lock = {
                     id: hashValues.id,
@@ -69,7 +69,7 @@ export default class LockService {
 
 
     static async getLockByIdAsync(id: string): Promise<LockRequest> {
-        const lock = await RedisClient.hGetAll(`lock:${id}`);
+        const lock = await RedisClientDb0.hGetAll(`lock:${id}`);
 
         if (Object.keys(lock).length === 0) {
             return { success: false, message: 'No lock with that id', statusCode: 400 };
@@ -93,7 +93,7 @@ export default class LockService {
 
         const user = authResult.user;
 
-        const lock = await RedisClient.hGetAll(`lock:${user.lockId}`);
+        const lock = await RedisClientDb0.hGetAll(`lock:${user.lockId}`);
 
         if (Object.keys(lock).length === 0) {
             return { success: false, message: 'No lock registeret with that email', statusCode: 400 };
@@ -139,7 +139,7 @@ export default class LockService {
             }
         }
 
-        const lock: Lock = await RedisClient.hGetAll(`lock:${id}`);
+        const lock: Lock = await RedisClientDb0.hGetAll(`lock:${id}`);
 
         if (Object.keys(lock).length === 0) {
             return { success: false, message: 'No registered lock with that id', statusCode: 400 };
@@ -153,11 +153,11 @@ export default class LockService {
             return { success: false, message: 'User already have a registered lock', statusCode: 409 };
         }
 
-        await RedisClient.hSet(`lock:${id}`, {
+        await RedisClientDb0.hSet(`lock:${id}`, {
             email: email,
         });
 
-        await RedisClient.hSet(`user:${email}`, {
+        await RedisClientDb0.hSet(`user:${email}`, {
             lock_id: id,
         });
 
@@ -172,7 +172,7 @@ export default class LockService {
 
             lock.status = newStatus;
 
-            await RedisClient.hSet(`lock:${lock.id}`, lock);
+            await RedisClientDb0.hSet(`lock:${lock.id}`, lock);
 
             return { success: true, message: 'Lock registered', statusCode: 201 };
         } catch (error) {

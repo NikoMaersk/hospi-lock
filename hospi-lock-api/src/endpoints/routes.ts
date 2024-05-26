@@ -1,14 +1,15 @@
 import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
-import { RedisClient } from '../services/database-service.js';
 import { User } from '../models/User.js';
 import LockController, { LOCKING } from '../services/lock-controller.js';
 import LogService from '../services/database/log-service.js';
-import AuthService from '../services/auth-service.js';
+import AuthService, { Role } from '../services/auth-service.js';
 import Lock from '../models/lock.js';
 import UserService from '../services/database/user-service.js';
 import LockService, { LockRequest } from '../services/database/lock-service.js';
+import Admin, { AdminRequest } from '../models/admin.js';
+import AdminService from '../services/database/admin-service.js';
 
 const routes = express();
 
@@ -106,7 +107,7 @@ routes.post('/signin', async (req, res) => {
   try {
     const ipAddress: string = req.headers['x-forwarded-for']?.[0] || req.socket.remoteAddress || "unknown";
 
-    const authResult = await AuthService.AuthenticationAsync(email, password);
+    const authResult = await AuthService.AuthenticationAsync(email, password, Role.USER);
 
     const logSuccess = await LogService.logMessageAsync(email, authResult.success, ipAddress);
 
@@ -118,7 +119,6 @@ routes.post('/signin', async (req, res) => {
     return res.status(500).send('A server error occurred');
   }
 });
-
 
 
 // Register a user under a lock
@@ -272,6 +272,62 @@ routes.post('/locks/lock/:email', async (req, res) => {
     console.error(`${errorMessage} : `, error);
     return res.status(500).send(errorMessage);
   }
+});
+
+
+routes.post('/admin', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).send('Missing required fields');
+  }
+
+  try {
+
+    const tempAdmin: Admin = {
+      email: email,
+      password: password
+    }
+
+    const request: AdminRequest = await AdminService.addAdminAsync(tempAdmin);
+
+    if (!request.success) {
+      return res.status(request.statusCode).send(request.message);
+    }
+
+    return res.status(201).json(email);
+
+  } catch (error) {
+    const errorMessage = 'Internal server error';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+routes.get('/admin', async (req, res) => {
+  try {
+    const adminRecords = await AdminService.getAllAdmins();
+
+    return res.status(200).json(adminRecords);
+  } catch (error) {
+    const errorMessage = 'Error fetching users';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+routes.get('/admin/:email', async (req, res) => {
+  const { email } = req.params;
+
+  const request: AdminRequest = await AdminService.getAdminByEmailAsync(email);
+
+  if (!request.success) {
+    return res.status(request.statusCode).send(request.message);
+  }
+
+  return res.status(200).json(request.admin);
 });
 
 
