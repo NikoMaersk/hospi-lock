@@ -8,9 +8,7 @@ export enum LOCKING {
 
 export default class LockController {
 
-    private static IP: string = process.env.IP || "10.176.69.22";
-    private static PORT: string = process.env.PORT || "5000";
-
+    private static PORT: string = process.env.PORT;
 
     static async lockingAsync(email: string, lock: LOCKING): Promise<{ success: boolean, message: string | unknown }> {
         const lockRequest: LockRequest = await LockService.getLockByEmail(email);
