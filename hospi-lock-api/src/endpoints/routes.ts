@@ -11,13 +11,15 @@ import LockService, { LockRequest } from '../services/database/lock-service.js';
 import Admin, { AdminRequest } from '../models/admin.js';
 import AdminService from '../services/database/admin-service.js';
 
+const cookieParser = require("cookie-parser");
+
 const routes = express();
 
 routes.use(cors());
 routes.use(express.static("public"));
 routes.use(bodyParser.urlencoded({ extended: false }));
 routes.use(bodyParser.json());
-
+routes.use(cookieParser());
 
 // Create new user
 routes.post('/users', async (req, res) => {
@@ -111,9 +113,18 @@ routes.post('/signin', async (req, res) => {
 
     const logSuccess = await LogService.logMessageAsync(email, authResult.success, ipAddress);
 
+    if (!authResult.success) {
+      return res.status(authResult.statusCode).send(authResult.message);
+    }
+
+    const token = AuthService.generateToken(email, Role.USER);
+
     console.log(`log success: ${logSuccess.success}, message: ${logSuccess.message}`);
 
-    return res.status(authResult.statusCode).send(authResult.message);
+    return res
+      .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 3600000 })
+      .status(authResult.statusCode)
+      .send({ message: authResult.message });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
@@ -305,6 +316,31 @@ routes.post('/admin', async (req, res) => {
 });
 
 
+routes.post('/admin/signin', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const authResult = await AuthService.AuthenticationAsync(email, password, Role.ADMIN);
+
+    console.log(`Admin signin: ${authResult.success}, message: ${authResult.message}`);
+
+    if (!authResult.success) {
+      return res.status(authResult.statusCode).send(authResult.message);
+    }
+
+    const token = AuthService.generateToken(email, Role.ADMIN);
+
+    return res
+      .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 3600000 })
+      .status(authResult.statusCode)
+      .send({ message: authResult.message });
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+});
+
+
 routes.get('/admin', async (req, res) => {
   try {
     const adminRecords = await AdminService.getAllAdmins();
@@ -327,7 +363,7 @@ routes.get('/admin/:email', async (req, res) => {
     return res.status(request.statusCode).send(request.message);
   }
 
-  return res.status(200).json(request.admin);
+  return res.status(200).json(request.user);
 });
 
 

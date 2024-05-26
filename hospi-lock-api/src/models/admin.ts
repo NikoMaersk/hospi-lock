@@ -9,5 +9,5 @@ export interface AdminRequest {
     success: boolean,
     message: string,
     statusCode?: number,
-    admin?: Admin
+    user?: Admin
 }

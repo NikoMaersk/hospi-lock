@@ -4,16 +4,15 @@ import { RedisClientDb0, RedisClientDb1 } from "./database-service";
 import { AdminRequest } from "../models/admin";
 import { UserRequest } from "../models/User";
 
+const jwt = require('jsonwebtoken');
+
 
 export enum Role {
-    USER,
-    ADMIN,
+    USER = 'user',
+    ADMIN = 'admin',
 }
 
-
 export default class AuthService {
-
-
     static async AuthenticationAsync(email: string, password: string, role: Role): Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
 
         try {
@@ -38,7 +37,7 @@ export default class AuthService {
     }
 
 
-    static async CheckExistenceAsync(email: string, role: Role) {
+    static async CheckExistenceAsync(email: string, role: Role): Promise<UserRequest | AdminRequest> {
 
         if (!email) {
             return { success: false, message: 'Missing required field', statusCode: 400 };
@@ -48,7 +47,7 @@ export default class AuthService {
             return { success: false, message: 'Not a valid email', statusCode: 400 };
         }
 
-        let result;
+        let result: UserRequest | AdminRequest;
 
         switch (role) {
             case Role.USER:
@@ -101,8 +100,51 @@ export default class AuthService {
             password: tempAdmin.password,
         }
 
-        return { success: true, message: 'OK', statusCode: 200, admin: admin };
+        return { success: true, message: 'OK', statusCode: 200, user: admin };
     }
+
+
+    static verifyToken = (req, res, next) => {
+        const token = req.cookies.token;
+    
+        if (!token) {
+            return res.status(403).send('No token provided');
+        }
+    
+        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+            if (err) {
+                return res.status(500).send('Failed to authenticate token');
+            }
+    
+            req.email = decoded.email;
+            req.role = decoded.role;
+            next();
+        });
+    };
+    
+    
+    static checkRole = (role: Role) => {
+        return (req, res, next) => {
+            if (req.role !== role) {
+                return res.status(403).send('Access denied');
+            }
+            next();
+        };
+    };
+    
+    
+    static generateToken = (email: string, role: Role) => {
+        const payload = {
+            email: email,
+            role: Role[role],
+        };
+    
+        const options = {
+            expiresIn: '1hr',
+        }
+    
+        return jwt.sign(payload, process.env.JWT_SECRET, options);
+    };
 
 
     static EmailValidator(email: string) {
