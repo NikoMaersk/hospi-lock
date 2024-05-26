@@ -9,7 +9,7 @@ services:
     restart: always
     volumes:
       - redis-server-data:/data
-    #  - ./redis.conf:/usr/local/etc/redis/redis.conf
+    #  - ./config/redis.conf:/usr/local/etc/redis/redis.conf
     #command: redis-server /usr/local/etc/redis/redis.conf
 
   api:
@@ -26,6 +26,18 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  redis-seed:
+    image: redis:latest
+    container_name: redis-seed
+    depends_on:
+      - redis
+    volumes:
+      - ./config:/config
+    command: bash -c "/config/import.sh && exit 0"
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379

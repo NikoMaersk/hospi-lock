@@ -105,44 +105,47 @@ export default class AuthService {
 
 
     static verifyToken = (req, res, next) => {
-        const token = req.cookies.token;
-    
+        const token = req.cookies.access_token;
+        console.log(`token: ${token}`);
         if (!token) {
+            console.log('No token provided in cookies');
             return res.status(403).send('No token provided');
         }
-    
+
         jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
             if (err) {
+                console.log('Failed to authenticate token:', err);
                 return res.status(500).send('Failed to authenticate token');
             }
-    
+
             req.email = decoded.email;
             req.role = decoded.role;
             next();
         });
     };
-    
-    
-    static checkRole = (role: Role) => {
+
+
+    static checkRole = (role) => {
         return (req, res, next) => {
             if (req.role !== role) {
+                console.log(`Access denied: role ${req.role} does not match ${role}`);
                 return res.status(403).send('Access denied');
             }
             next();
         };
     };
-    
-    
+
+
     static generateToken = (email: string, role: Role) => {
         const payload = {
             email: email,
             role: Role[role],
         };
-    
+
         const options = {
             expiresIn: '1hr',
         }
-    
+
         return jwt.sign(payload, process.env.JWT_SECRET, options);
     };
 

@@ -6,6 +6,7 @@ hospi-lock-web/.pnp
 
 # testing
 hospi-lock-web/coverage
+config/import.log
 
 # next.js
 hospi-lock-web/.next/

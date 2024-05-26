@@ -15,11 +15,11 @@ const cookieParser = require("cookie-parser");
 
 const routes = express();
 
+routes.use(cookieParser());
 routes.use(cors());
 routes.use(express.static("public"));
 routes.use(bodyParser.urlencoded({ extended: false }));
 routes.use(bodyParser.json());
-routes.use(cookieParser());
 
 // Create new user
 routes.post('/users', async (req, res) => {
@@ -68,7 +68,7 @@ routes.get('/users/:email', async (req, res) => {
 
 
 // Get all users
-routes.get('/users', async (req, res) => {
+routes.get('/users', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   try {
     const userRecords = await UserService.getAllUsersAsync();
 
@@ -122,7 +122,7 @@ routes.post('/signin', async (req, res) => {
     console.log(`log success: ${logSuccess.success}, message: ${logSuccess.message}`);
 
     return res
-      .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 3600000 })
+      .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: parseInt(process.env.JWT_EXPIRATION_TIME, 10) })
       .status(authResult.statusCode)
       .send({ message: authResult.message });
   } catch (error) {
@@ -157,7 +157,7 @@ routes.post('/locks/user', async (req, res) => {
 
 
 // Get a specific lock with a registered email
-routes.get('/locks/email/:email', async (req, res) => {
+routes.get('/locks/email/:email', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   let { email } = req.params;
 
   try {
@@ -176,7 +176,7 @@ routes.get('/locks/email/:email', async (req, res) => {
 
 
 // Get a specific lock with a id
-routes.get('/locks/id/:id', async (req, res) => {
+routes.get('/locks/id/:id', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -194,7 +194,7 @@ routes.get('/locks/id/:id', async (req, res) => {
 });
 
 
-routes.get('/locks/status/:id', async (req, res) => {
+routes.get('/locks/status/:id', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -213,7 +213,7 @@ routes.get('/locks/status/:id', async (req, res) => {
 
 
 // Post a new lock
-routes.post('/locks', async (req, res) => {
+routes.post('/locks', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   const lockRequest: Lock = req.body;
 
   if (!lockRequest || !lockRequest.ip) {
@@ -236,7 +236,7 @@ routes.post('/locks', async (req, res) => {
 
 
 // Get all locks
-routes.get('/locks', async (req, res) => {
+routes.get('/locks', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   try {
     const lockRecords = await LockService.getAllLocksAsync();
 
@@ -286,7 +286,7 @@ routes.post('/locks/lock/:email', async (req, res) => {
 });
 
 
-routes.post('/admin', async (req, res) => {
+routes.post('/admin', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -331,7 +331,7 @@ routes.post('/admin/signin', async (req, res) => {
     const token = AuthService.generateToken(email, Role.ADMIN);
 
     return res
-      .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: 3600000 })
+      .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: parseInt(process.env.JWT_EXPIRATION_TIME, 10) })
       .status(authResult.statusCode)
       .send({ message: authResult.message });
   } catch (error) {
@@ -341,7 +341,15 @@ routes.post('/admin/signin', async (req, res) => {
 });
 
 
-routes.get('/admin', async (req, res) => {
+routes.post("/logout", AuthService.verifyToken, (req, res) => {
+  return res
+    .clearCookie("access_token")
+    .status(200)
+    .json({ message: "Successfully logged out" });
+});
+
+
+routes.get('/admin', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   try {
     const adminRecords = await AdminService.getAllAdmins();
 
@@ -354,7 +362,7 @@ routes.get('/admin', async (req, res) => {
 });
 
 
-routes.get('/admin/:email', async (req, res) => {
+routes.get('/admin/:email', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   const { email } = req.params;
 
   const request: AdminRequest = await AdminService.getAdminByEmailAsync(email);
@@ -367,7 +375,7 @@ routes.get('/admin/:email', async (req, res) => {
 });
 
 
-routes.get('/logs', async (req, res) => {
+routes.get('/logs', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   try {
     const deserializedData = await LogService.getAllLogsAsync();
     return res.status(200).json(deserializedData);
