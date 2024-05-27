@@ -391,7 +391,7 @@ routes.get('/logs', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), 
 routes.post('/logs', async (req, res) => {
   const { timestamp, ip, status } = req.body;
 
-  if (!timestamp || !ip || status) {
+  if (!timestamp || !ip) {
     return res.status(400).send('Missing required fields');
   }
 
