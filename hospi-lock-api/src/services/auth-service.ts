@@ -139,7 +139,7 @@ export default class AuthService {
     static generateToken = (email: string, role: Role) => {
         const payload = {
             email: email,
-            role: Role[role],
+            role: role,
         };
 
         const options = {
