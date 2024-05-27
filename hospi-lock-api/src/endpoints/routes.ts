@@ -83,7 +83,7 @@ routes.get('/users', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN),
 
 
 // Patch user password
-routes.patch('/users/:email/password', AuthService.verifyToken, async (req, res) => {
+routes.patch('/users/:email/password', async (req, res) => {
   const { email } = req.params;
   const { password } = req.body;
 
@@ -407,7 +407,7 @@ routes.post('/logs', async (req, res) => {
       return res.status(500).send(logRequest.message)
     }
 
-    return res.status(200).json({timestamp: timestamp, ip: ip, status: status});
+    return res.status(201).json({timestamp: timestamp, ip: ip, status: status});
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);

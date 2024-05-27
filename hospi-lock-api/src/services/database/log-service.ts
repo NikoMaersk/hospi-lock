@@ -73,7 +73,7 @@ export default class LogService {
 
             const logEntrySerialized = JSON.stringify(logEntry);
 
-            await RedisClientDb1.zAdd('lock_log', {
+            await RedisClientDb1.zAdd('lock_logs', {
                 score: timestamp,
                 value: logEntrySerialized,
             });
@@ -82,6 +82,29 @@ export default class LogService {
         } catch (error) {
             console.error('Error logging message: ', error);
             return { success: false, message: "Failed to log message" };
+        }
+    }
+
+
+    static async getAllLockingLogsAsync(): Promise<Log[]> {
+
+        try {
+            const data = await RedisClientDb1.zRange('lock_logs', 0, -1);
+
+            const deserializedData: Log[] = data.map(item => {
+                const parsedItem = JSON.parse(item);
+                return {
+                    timestamp: parsedItem.timestamp,
+                    email: parsedItem.email,
+                    ip: parsedItem.ip,
+                    success: parsedItem.success
+                };
+            });
+
+            return deserializedData;
+        } catch (error) {
+            console.error('Error logging message: ', error);
+            return [];
         }
     }
 
