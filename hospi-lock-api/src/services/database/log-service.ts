@@ -61,6 +61,17 @@ export default class LogService {
     }
 
 
+    static async logLockingMessage(timestamp: string, ip: string, status: string) {
+        const logEntry = {
+            timestamp: timestamp,
+            ip: ip,
+            status: status
+        }
+
+
+    }
+
+
     static parseIPAddress(ip: string): string {
 
         if (ip.startsWith('::ffff:')) {

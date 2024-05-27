@@ -1,7 +1,7 @@
 
 export interface Log {
     timestamp: string,
-    email: string,
+    email?: string,
     ip: string,
     success: boolean,
 }

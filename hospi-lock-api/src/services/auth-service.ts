@@ -143,7 +143,7 @@ export default class AuthService {
         };
 
         const options = {
-            expiresIn: '1hr',
+            expiresIn: '12hr',
         }
 
         return jwt.sign(payload, process.env.JWT_SECRET, options);

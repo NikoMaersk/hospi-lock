@@ -38,7 +38,7 @@ routes.post('/users', async (req, res) => {
     }
 
     const { password, ...userWithoutPassword } = user;
-
+    console.log(`New user created: ${email}`)
     return res.status(201).json(userWithoutPassword);
   } catch (error) {
     const errorMessage = 'Internal server error'
@@ -53,6 +53,7 @@ routes.get('/users/:email', AuthService.verifyToken, async (req, res) => {
   const { email } = req.params;
   try {
     const dataRequest = await UserService.getUserByEmailAsync(email);
+    console.log(`GET user request: ${dataRequest.success}`)
 
     if (!dataRequest.success) {
       return res.status(dataRequest.statusCode).send(dataRequest.message);
@@ -157,7 +158,7 @@ routes.post('/locks/user', AuthService.verifyToken, async (req, res) => {
 
 
 // Get a specific lock with a registered email
-routes.get('/locks/email/:email', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/locks/email/:email', AuthService.verifyToken, async (req, res) => {
   let { email } = req.params;
 
   try {
@@ -194,7 +195,7 @@ routes.get('/locks/id/:id', AuthService.verifyToken, async (req, res) => {
 });
 
 
-routes.get('/locks/status/:id', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/locks/status/:id', AuthService.verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -379,6 +380,25 @@ routes.get('/logs', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), 
   try {
     const deserializedData = await LogService.getAllLogsAsync();
     return res.status(200).json(deserializedData);
+  } catch (error) {
+    const errorMessage = 'Internal server error';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+routes.post('logs/', async (req, res) => {
+  const { timestamp, ip, status } = req.body;
+
+  if (!timestamp || !ip || status) {
+    return res.status(400).send('Missing required fields');
+  }
+
+  try {
+   
+    
+
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);
