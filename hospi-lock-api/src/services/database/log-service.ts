@@ -23,7 +23,7 @@ export default class LogService {
 
             const logEntrySerialized = JSON.stringify(logEntry);
 
-            await RedisClientDb1.zAdd('logs', [
+            await RedisClientDb1.zAdd('login_logs', [
                 {
                     score: timestamp,
                     value: logEntrySerialized,
@@ -43,7 +43,7 @@ export default class LogService {
     static async getAllLogsAsync(): Promise<Log[]> {
 
         try {
-            const data = await RedisClientDb1.zRange('logs', 0, -1);
+            const data = await RedisClientDb1.zRange('login_logs', 0, -1);
 
             const deserializedData: Log[] = data.map(item => {
                 const parsedItem = JSON.parse(item);
@@ -73,7 +73,7 @@ export default class LogService {
 
             const logEntrySerialized = JSON.stringify(logEntry);
 
-            await RedisClientDb1.zAdd('log_lock', {
+            await RedisClientDb1.zAdd('lock_log', {
                 score: timestamp,
                 value: logEntrySerialized,
             });
