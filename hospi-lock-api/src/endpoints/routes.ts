@@ -3,7 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { User } from '../models/User.js';
 import LockController, { LOCKING } from '../services/lock-controller.js';
-import LogService from '../services/database/log-service.js';
+import LogService, { LogRequest } from '../services/database/log-service.js';
 import AuthService, { Role } from '../services/auth-service.js';
 import Lock from '../models/lock.js';
 import UserService from '../services/database/user-service.js';
@@ -388,17 +388,26 @@ routes.get('/logs', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), 
 });
 
 
-routes.post('logs/', async (req, res) => {
+routes.post('/logs', async (req, res) => {
   const { timestamp, ip, status } = req.body;
 
   if (!timestamp || !ip || status) {
     return res.status(400).send('Missing required fields');
   }
 
+  if (timestamp.length !== 13) {
+    return res.status(400).send('Timestamp must be epoch in milliseconds');
+  }
+
   try {
    
-    
+    const logRequest: LogRequest = await LogService.logLockingMessage(timestamp, ip, status);
 
+    if (!logRequest.success) {
+      return res.status(500).send(logRequest.message)
+    }
+
+    return res.status(200).json({timestamp: timestamp, ip: ip, status: status});
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);

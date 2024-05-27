@@ -30,7 +30,9 @@ export default class LogService {
                 }
             ]);
 
-            return { success: true, message: 'Log added succesfully' };
+            
+            console.log(`Log added succesfully: ${logEntrySerialized}`)
+            return { success: true, message: 'Log added succesfully', log: logEntry };
         } catch (error) {
             console.error('Error logging message: ', error);
             return { success: false, message: "Failed to log message" };
@@ -61,21 +63,33 @@ export default class LogService {
     }
 
 
-    static async logLockingMessage(timestamp: string, ip: string, status: string) {
-        const logEntry = {
-            timestamp: timestamp,
-            ip: ip,
-            status: status
+    static async logLockingMessage(timestamp: string, ip: string, status: string): Promise<LogRequest> {
+        try {
+            const logEntry = {
+                timestamp: timestamp,
+                ip: ip,
+                status: status
+            }
+
+            const logEntrySerialized = JSON.stringify(logEntry);
+
+            await RedisClientDb1.zAdd('log_lock', {
+                score: timestamp,
+                value: logEntrySerialized,
+            });
+
+            return { success: true, message: 'Log added succesfully' };
+        } catch (error) {
+            console.error('Error logging message: ', error);
+            return { success: false, message: "Failed to log message" };
         }
-
-
     }
 
 
     static parseIPAddress(ip: string): string {
 
         if (ip.startsWith('::ffff:')) {
-          ip = ip.substring(7);
+            ip = ip.substring(7);
         }
 
         return ip;
