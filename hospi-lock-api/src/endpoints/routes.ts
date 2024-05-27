@@ -176,7 +176,7 @@ routes.get('/locks/email/:email', AuthService.verifyToken, AuthService.checkRole
 
 
 // Get a specific lock with a id
-routes.get('/locks/id/:id', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/locks/id/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -248,7 +248,7 @@ routes.get('/locks', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN),
 });
 
 
-routes.post('/locks/unlock/:email', async (req, res) => {
+routes.post('/locks/unlock/:email', AuthService.verifyToken, async (req, res) => {
   const { email } = req.params;
 
   try {
@@ -267,7 +267,7 @@ routes.post('/locks/unlock/:email', async (req, res) => {
 });
 
 
-routes.post('/locks/lock/:email', async (req, res) => {
+routes.post('/locks/lock/:email', AuthService.verifyToken, async (req, res) => {
   const { email } = req.params;
 
   try {
