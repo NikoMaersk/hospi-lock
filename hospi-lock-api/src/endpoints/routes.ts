@@ -49,7 +49,7 @@ routes.post('/users', async (req, res) => {
 
 
 // Get specific user with email as parameter
-routes.get('/users/:email', async (req, res) => {
+routes.get('/users/:email', AuthService.verifyToken, async (req, res) => {
   const { email } = req.params;
   try {
     const dataRequest = await UserService.getUserByEmailAsync(email);
@@ -82,7 +82,7 @@ routes.get('/users', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN),
 
 
 // Patch user password
-routes.patch('/users/:email/password', async (req, res) => {
+routes.patch('/users/:email/password', AuthService.verifyToken, async (req, res) => {
   const { email } = req.params;
   const { password } = req.body;
 
@@ -133,7 +133,7 @@ routes.post('/signin', async (req, res) => {
 
 
 // Register a user under a lock
-routes.post('/locks/user', async (req, res) => {
+routes.post('/locks/user', AuthService.verifyToken, async (req, res) => {
   let { email, id } = req.body;
 
   if (!email || !id) {
@@ -176,7 +176,7 @@ routes.get('/locks/email/:email', AuthService.verifyToken, AuthService.checkRole
 
 
 // Get a specific lock with a id
-routes.get('/locks/id/:id', async (req, res) => {
+routes.get('/locks/id/:id', AuthService.verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -341,7 +341,7 @@ routes.post('/admin/signin', async (req, res) => {
 });
 
 
-routes.post("/logout", AuthService.verifyToken, (req, res) => {
+routes.post("/signout", AuthService.verifyToken, (req, res) => {
   return res
     .clearCookie("access_token")
     .status(200)
