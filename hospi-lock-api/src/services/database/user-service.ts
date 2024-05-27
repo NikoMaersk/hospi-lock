@@ -12,7 +12,6 @@ export default class UserService {
 
         const user: User = {
             email: lowerCaseEmail,
-            password: tempUser.password,
             firstName: tempUser.first_name,
             lastName: tempUser.last_name,
             date: tempUser.reg_date,
@@ -32,7 +31,6 @@ export default class UserService {
 
                 const tempUser: User = {
                     email: hashValues.email,
-                    password: hashValues.password,
                     firstName: hashValues.first_name,
                     lastName: hashValues.last_name,
                     date: hashValues.reg_date,
