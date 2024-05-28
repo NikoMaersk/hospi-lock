@@ -10,6 +10,7 @@ import UserService from '../services/database/user-service.js';
 import LockService, { LockRequest } from '../services/database/lock-service.js';
 import Admin, { AdminRequest } from '../models/admin.js';
 import AdminService from '../services/database/admin-service.js';
+import { Log } from '../models/log.js';
 
 const cookieParser = require("cookie-parser");
 
@@ -112,7 +113,7 @@ routes.post('/signin', async (req, res) => {
 
     const authResult = await AuthService.AuthenticationAsync(email, password, Role.USER);
 
-    const logSuccess = await LogService.logMessageAsync(email, authResult.success, ipAddress);
+    const logSuccess = await LogService.logSigninMessageAsync(email, authResult.success, ipAddress);
 
     if (!authResult.success) {
       return res.status(authResult.statusCode).send(authResult.message);
@@ -376,10 +377,43 @@ routes.get('/admin/:email', AuthService.verifyToken, AuthService.checkRole(Role.
 });
 
 
-routes.get('/logs', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/logs/lock', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+  const offset: number = parseInt(req.query.offset as string);
+  const limit: number = parseInt(req.query.limit as string);
+
   try {
-    const deserializedData = await LogService.getAllLogsAsync();
-    return res.status(200).json(deserializedData);
+    let logRequest: Log[] = null;
+
+    if (offset || limit) {
+      logRequest = await LogService.getPartialLockingLogsAsync(offset, limit);
+    } else {
+      logRequest = await LogService.getAllLockingLogsAsync();
+    }
+
+    return res.status(200).json(logRequest);
+  } catch (error) {
+    const errorMessage = 'Internal server error';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
+});
+
+
+routes.get('/logs/signin', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+  const offset: number = parseInt(req.query.offset as string);
+  const limit: number = parseInt(req.query.limit as string);
+
+  try {
+
+    let logRequest: Log[] = null;
+
+    if (offset || limit) {
+      logRequest = await LogService.getPartialSigninLogsAsync(offset, limit);
+    } else {
+      logRequest = await LogService.getAllSigninLogsAsync();
+    }
+
+    return res.status(200).json(logRequest);
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);
@@ -400,14 +434,14 @@ routes.post('/logs', async (req, res) => {
   }
 
   try {
-   
+
     const logRequest: LogRequest = await LogService.logLockingMessage(timestamp, ip, status);
 
     if (!logRequest.success) {
       return res.status(500).send(logRequest.message)
     }
 
-    return res.status(201).json({timestamp: timestamp, ip: ip, status: status});
+    return res.status(201).json({ timestamp: timestamp, ip: ip, status: status });
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);

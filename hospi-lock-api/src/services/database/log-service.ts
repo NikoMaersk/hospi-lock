@@ -8,7 +8,7 @@ export interface LogRequest {
 }
 
 export default class LogService {
-    static async logMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
+    static async logSigninMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
         try {
             const timestamp = Date.now();
 
@@ -30,7 +30,7 @@ export default class LogService {
                 }
             ]);
 
-            
+
             console.log(`Log added succesfully: ${logEntrySerialized}`)
             return { success: true, message: 'Log added succesfully', log: logEntry };
         } catch (error) {
@@ -40,7 +40,7 @@ export default class LogService {
     }
 
 
-    static async getAllLogsAsync(): Promise<Log[]> {
+    static async getAllSigninLogsAsync(): Promise<Log[]> {
 
         try {
             const data = await RedisClientDb1.zRange('login_logs', 0, -1);
@@ -60,6 +60,33 @@ export default class LogService {
             console.error('Error logging message: ', error);
             return [];
         }
+    }
+
+
+    static async getPartialSigninLogsAsync(offset: number, limit: number): Promise<Log[]> {
+
+        limit += offset - 1;
+
+        if (offset > limit) {
+            return [];
+        }
+
+        console.log({message: `Fetching logs with offset: ${offset}, limit: ${limit}`});
+        
+
+        const data = await RedisClientDb1.zRange('login_logs', offset, limit);
+
+        const deserializedData: Log[] = data.map(item => {
+            const parsedItem = JSON.parse(item);
+            return {
+                timestamp: parsedItem.timestamp,
+                email: parsedItem.email,
+                ip: parsedItem.ip,
+                success: parsedItem.success
+            };
+        });
+
+        return deserializedData;
     }
 
 
@@ -97,7 +124,7 @@ export default class LogService {
                     timestamp: parsedItem.timestamp,
                     email: parsedItem.email,
                     ip: parsedItem.ip,
-                    success: parsedItem.success
+                    status: parsedItem.status
                 };
             });
 
@@ -106,6 +133,31 @@ export default class LogService {
             console.error('Error logging message: ', error);
             return [];
         }
+    }
+
+
+    static async getPartialLockingLogsAsync(offset: number, limit: number): Promise<Log[]> {
+        
+        limit += offset - 1;
+
+        if (offset > limit) {
+            return [];
+        }
+
+        console.log({message: `Fetching logs with offset: ${offset}, limit: ${limit}`});
+
+        const data = await RedisClientDb1.zRange('lock_logs', offset, limit);
+
+        const deserializedData: Log[] = data.map(item => {
+            const parsedData = JSON.parse(item);
+            return {
+                timestamp: parsedData.timestamp,
+                ip: parsedData.ip,
+                status: parsedData.status,
+            };
+        });
+
+        return deserializedData;
     }
 
 
