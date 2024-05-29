@@ -49,6 +49,35 @@ export default class UserService {
         }
     }
 
+
+    static async getPartialUsersAsync(amount: number): Promise<Record<string, User>> {
+        const cursor = 0;
+        const pattern = 'user:*';
+        const countAmount = amount;
+
+        const keys = await RedisClientDb0.scan(cursor, 'MATCH', pattern, 'COUNT', countAmount);
+        const allHashes: Record<string, User> = {};
+
+        const promises = keys.map(async (key) => {
+            const hashValues = await RedisClientDb0.hGetAll(key);
+
+            const tempUser: User = {
+                email: hashValues.email,
+                firstName: hashValues.first_name,
+                lastName: hashValues.last_name,
+                date: hashValues.date,
+                lockId: hashValues.lock_id
+            }
+
+            allHashes[key] = tempUser;
+        });
+
+        await Promise.all(promises);
+
+        return allHashes;
+    }
+    
+
     static async addUserAsync(user: User): Promise<UserRequest> {
         const lowerCaseEmail = user.email.toLowerCase();
         const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
@@ -75,7 +104,7 @@ export default class UserService {
 
 
     static async patchPasswordAsync(email: string, newPassword: string): Promise<UserRequest> {
-        
+
         const getUserRequest: UserRequest = await this.getUserByEmailAsync(email);
 
         if (!getUserRequest.success) {
