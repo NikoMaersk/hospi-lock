@@ -33,7 +33,7 @@ export default function PageHeader() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className={twMerge(buttonStyles({variant: "ghost", size: "default"}), "flex-shrink-0 rounded-full size-10") }>
+                        className={twMerge(buttonStyles({ variant: "ghost", size: "default" }), "flex-shrink-0 rounded-full size-10")}>
                         <ArrowLeft />
                     </Button>
                 )}
@@ -64,7 +64,9 @@ export default function PageHeader() {
                 <Button variant="ghost" className={`${showFullWidthSearch ? "hidden" : ""}`}>
                     <Bell />
                 </Button>
-                <ThemeSwitch />
+                <div className="border-r border-l border-gray-400 px-2">
+                    <ThemeSwitch />
+                </div>
                 <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" className={twMerge(buttonStyles({ variant: "ghost" }), `p-0.5 ml-2`)}>
                     <img src="https://randomuser.me/api/portraits/med/women/10.jpg"
                         className="rounded-full size-full" />
