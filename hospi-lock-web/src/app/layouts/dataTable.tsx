@@ -54,7 +54,7 @@ interface Lock {
 }
 
 
-export default function StatisticsView({ }) {
+export default function DataTable({ }) {
     return (
         <div>
             <LogTableItem></LogTableItem>
