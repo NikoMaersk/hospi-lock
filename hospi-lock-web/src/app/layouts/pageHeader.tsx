@@ -7,14 +7,22 @@ import { twMerge } from "tailwind-merge";
 import logo from "../assets/Logo.png"
 import Image from "next/image";
 import ThemeSwitch from "../components/ThemeSwitch";
+import ModalLogin from "../components/modalLogin";
 
 export default function PageHeader() {
     const inputRef = useRef<HTMLInputElement>(null);
     const [showFullWidthSearch, setShowFullWidthSearch] = useState(false);
     const [inputFocused, setInputFocused] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const toggleModal = () => {
+        setIsModalOpen(!isModalOpen)
+    }
 
     return (
         <div className="flex justify-between items-center w-full py-3 shadow-md gap-2">
+            <ModalLogin show={isModalOpen} onClose={toggleModal}/>
             {!showFullWidthSearch && (
                 <nav className="flex flex-shrink-0 md:gap-4 px-4">
                     <Button variant="ghost">
@@ -67,10 +75,18 @@ export default function PageHeader() {
                 <div className="border-r border-l border-gray-400 px-2">
                     <ThemeSwitch />
                 </div>
-                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" className={twMerge(buttonStyles({ variant: "ghost" }), `p-0.5 ml-2`)}>
-                    <img src="https://randomuser.me/api/portraits/med/women/10.jpg"
-                        className="rounded-full size-full" />
-                </a>
+                {isLoggedIn ?
+                    (<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" className={twMerge(buttonStyles({ variant: "ghost" }), `p-0.5 ml-2`)}>
+                        <img src="https://randomuser.me/api/portraits/med/women/10.jpg"
+                            className="rounded-full size-full" />
+                    </a>
+                    ) : (
+                        <Button size="square" className="w-20 h-10 items-center justify-center font-bold
+                         border-red-500 bg-white hover:bg-red-500 hover:text-white"
+                         onClick={toggleModal}>
+                            Login
+                        </Button>
+                    )}
             </div>
         </div >
     );
