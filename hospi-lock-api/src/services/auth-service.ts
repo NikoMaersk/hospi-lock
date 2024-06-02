@@ -3,6 +3,7 @@ import Admin from "../models/admin";
 import { RedisClientDb0, RedisClientDb1 } from "./database-service";
 import { AdminRequest } from "../models/admin";
 import { UserRequest } from "../models/User";
+import { NextFunction, Request, Response } from "express";
 
 const jwt = require('jsonwebtoken');
 
@@ -104,7 +105,7 @@ export default class AuthService {
     }
 
 
-    static verifyToken = (req, res, next) => {
+    static verifyToken = (req: Request, res: Response, next: NextFunction) => {
         const token = req.cookies.access_token;
         console.log(`token: ${token}`);
         if (!token) {
@@ -125,7 +126,7 @@ export default class AuthService {
     };
 
 
-    static checkRole = (role) => {
+    static checkRole = (role: Role) => {
         return (req, res, next) => {
             if (req.role !== role) {
                 console.log(`Access denied: role ${req.role} does not match ${role}`);

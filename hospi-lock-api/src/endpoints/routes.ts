@@ -453,8 +453,18 @@ routes.post('/logs', async (req, res) => {
 });
 
 
-routes.post('/auth', async (req, res) => {
-  res.redirect(302, '/signin');
+routes.get('/admin/auth', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+  const email = req.email;
+
+  const adminRequest: AdminRequest = await AdminService.getAdminByEmailAsync(email);
+
+  if (!adminRequest.success) {
+    return res.status(adminRequest.statusCode).send(adminRequest.message);
+  }
+
+  const {password, ...adminWithoutPassword} = adminRequest.user;
+
+  return res.status(200).json(adminWithoutPassword);
 });
 
 
