@@ -20,9 +20,37 @@ export default function PageHeader() {
         setIsModalOpen(!isModalOpen)
     }
 
+
+    const handleLogin = async (email: string, password: string) => {
+        try {
+          const response = await fetch('http://localhost:4000/admin/signin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email: email,
+              password: password
+            }),
+            credentials: 'include'
+          });
+
+          console.log(response.json());
+    
+          if (response.ok) {
+            console.log('Login successful');
+            setIsLoggedIn(true);
+          } else {
+            console.error('Login failed');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      };
+
     return (
         <div className="flex justify-between items-center w-full py-3 shadow-md gap-2">
-            <ModalLogin show={isModalOpen} onClose={toggleModal}/>
+            <ModalLogin show={isModalOpen} onClose={toggleModal} onSignIn={handleLogin}/>
             {!showFullWidthSearch && (
                 <nav className="flex flex-shrink-0 md:gap-4 px-4">
                     <Button variant="ghost">
@@ -54,6 +82,7 @@ export default function PageHeader() {
                         <Search />
                     </Button>
                     <input
+                        id="SearchField"
                         type="search"
                         placeholder="Search"
                         className=" rounded-r-md px-4 text-lg w-full outline-none text-gray-800 "
@@ -66,13 +95,13 @@ export default function PageHeader() {
                 <Button variant="ghost" className={`md:hidden ${showFullWidthSearch ? "hidden" : ""}`} onClick={() => setShowFullWidthSearch(true)}>
                     <Search />
                 </Button>
-                <Button variant="ghost" className={`${showFullWidthSearch ? "hidden" : ""}`}>
+                <Button variant="ghost" className={`${showFullWidthSearch ? "hidden" : ""}`} >
                     <HelpCircle />
                 </Button>
                 <Button variant="ghost" className={`${showFullWidthSearch ? "hidden" : ""}`}>
                     <Bell />
                 </Button>
-                <div className="border-r border-l border-gray-400 px-2">
+                <div className="border-x border-gray-400 px-2">
                     <ThemeSwitch />
                 </div>
                 {isLoggedIn ?
@@ -81,10 +110,10 @@ export default function PageHeader() {
                             className="rounded-full size-full" />
                     </a>
                     ) : (
-                        <Button size="square" className="w-20 h-10 items-center justify-center font-bold
+                        <Button size="square" className="sm:w-[88px] h-9 items-center justify-center font-bold
                          border-red-500 bg-white hover:bg-red-500 hover:text-white"
                          onClick={toggleModal}>
-                            Login
+                            Sign in
                         </Button>
                     )}
             </div>

@@ -12,7 +12,7 @@ export default function AdminComponent() {
             <div className="grid grid-cols-[auto,1fr] flex-grow-1 overflow-auto">
                 <Sidebar />
                 <div className="overflow-x-hidden px-8 pb-4">
-                    <DataTable />
+                    
                 </div>
             </div>
         </div>

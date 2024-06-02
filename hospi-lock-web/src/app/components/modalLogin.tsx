@@ -1,11 +1,30 @@
 'use client'
 
+import { useState } from "react";
 
-export default function ModalLogin({ show, onClose }: { show: boolean, onClose: any }) {
+
+interface ModalLoginProps {
+    show: boolean,
+    onClose: () => void,
+    onSignIn: (email: string, password: string) => void
+}
+
+export default function ModalLogin({ show, onClose, onSignIn }: ModalLoginProps) {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        console.log('Attempting sign in');
+        onClose();
+        onSignIn(email, password);
+    };
+
 
     if (!show) {
         return null;
     }
+
 
     return (
         <div className="fixed inset-0 z-50 flex justify-center items-center overflow-x-hidden overflow-y-auto h-modal md:h-full bg-black bg-opacity-70">
@@ -27,7 +46,7 @@ export default function ModalLogin({ show, onClose }: { show: boolean, onClose: 
                             </svg>
                         </button>
                     </div>
-                    <form className="space-y-6 px-6 lg:px-8 pb-4 sm:pb-6 xl:pb-8" action="#">
+                    <form onSubmit={handleSubmit} className="space-y-6 px-6 lg:px-8 pb-4 sm:pb-6 xl:pb-8">
                         <h3 className="text-xl font-medium text-gray-900 dark:text-white">Sign in</h3>
                         <div>
                             <label htmlFor="email" className="text-sm font-medium text-gray-900 block mb-2 dark:text-gray-300">
@@ -37,9 +56,12 @@ export default function ModalLogin({ show, onClose }: { show: boolean, onClose: 
                                 type="email"
                                 name="email"
                                 id="email"
-                                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                                className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 
+                                dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
                                 placeholder="name@company.com"
-                                required />
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)} />
                         </div>
                         <div>
                             <label htmlFor="password" className="text-sm font-medium text-gray-900 block mb-2 dark:text-gray-300">
@@ -52,7 +74,9 @@ export default function ModalLogin({ show, onClose }: { show: boolean, onClose: 
                                 placeholder="•••••"
                                 className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
                                  dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                                required />
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)} />
                         </div>
                         <div className="flex justify-between">
                             <div className="flex items-start">
@@ -61,8 +85,8 @@ export default function ModalLogin({ show, onClose }: { show: boolean, onClose: 
                                         id="remember"
                                         aria-describedby="remember"
                                         type="checkbox"
-                                        className="bg-gray-50 border border-gray-300 focus:ring-3 focus:ring-blue-300 h-4 w-4 rounded dark:bg-gray-600 dark:border-gray-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800"
-                                        required />
+                                        className="bg-gray-50 border border-gray-300 focus:ring-3 focus:ring-blue-300 h-4 w-4 rounded 
+                                        dark:bg-gray-600 dark:border-gray-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800" />
                                 </div>
                                 <div className="text-sm ml-3">
                                     <label htmlFor="remember" className="font-medium text-gray-900 dark:text-gray-300">
@@ -70,7 +94,7 @@ export default function ModalLogin({ show, onClose }: { show: boolean, onClose: 
                                     </label>
                                 </div>
                             </div>
-                            <a href="#" className="text-sm text-blue-700 hover:underline dark:text-blue-500">
+                            <a className="text-sm text-blue-700 hover:underline dark:text-blue-500">
                                 Lost Password?
                             </a>
                         </div>
@@ -82,7 +106,7 @@ export default function ModalLogin({ show, onClose }: { show: boolean, onClose: 
                         </button>
                         <div className="text-sm font-medium text-gray-500 dark:text-gray-300">
                             Not registered?{' '}
-                            <a href="#" className="text-blue-700 hover:underline dark:text-blue-500">
+                            <a className="text-blue-700 hover:underline dark:text-blue-500">
                                 Create account
                             </a>
                         </div>
