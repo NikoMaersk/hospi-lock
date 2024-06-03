@@ -453,16 +453,19 @@ routes.post('/logs', async (req, res) => {
 });
 
 
-routes.get('/admin/auth', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.post('/admin/auth', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
   const email = req.email;
 
   const adminRequest: AdminRequest = await AdminService.getAdminByEmailAsync(email);
 
   if (!adminRequest.success) {
+    console.log('Admin authentication denied');
     return res.status(adminRequest.statusCode).send(adminRequest.message);
   }
 
   const {password, ...adminWithoutPassword} = adminRequest.user;
+
+  console.log(`Admin authenticated: ${adminWithoutPassword}`);
 
   return res.status(200).json(adminWithoutPassword);
 });
