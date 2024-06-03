@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { formatEpochTime } from "../helper/formatTime";
 
 async function getLogs(): Promise<Log[]> {
-    const res = await fetch('http://localhost:4000/logs/signin');
+    const res = await fetch('http://localhost:4000/logs/signin', {
+        method: 'GET',
+        credentials: 'include',
+    });
     if (!res.ok) {
         throw new Error('Failed to fetch logs');
     }
@@ -65,27 +68,29 @@ export default function DataTable({ }) {
 
 export function LogTableItem() {
     const [logList, setLogList] = useState<Log[]>([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchLogs() {
             try {
                 const logs = await getLogs();
+                setLoading(false);
                 setLogList(logs);
             } catch (err: any) {
+                setLoading(false);
                 setError(err.message);
             }
         }
         fetchLogs();
     }, []);
 
-    if (error) {
-        return <div>Error: {error}</div>;
-    }
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
 
 
     return (
-        <table>
+        <table className="w-full text-center mt-4 pr-4">
             <thead className="border-b-2">
                 <tr>
                     <th>Date</th>
@@ -99,12 +104,12 @@ export function LogTableItem() {
                 {logList.map((log: Log, index: number) => {
                     const formattedTime = formatEpochTime(new Date(parseInt(log.timestamp)));
                     return (
-                        <tr className="border-b-2" key={index}>
-                            <td>{formattedTime.date}</td>
-                            <td>{formattedTime.time}</td>
-                            <td>{log.email}</td>
-                            <td>{log.ip}</td>
-                            <td>{log.success ? 'Yes' : 'No'}</td>
+                        <tr className="border-b-2 border-x-2" key={index}>
+                            <td className="border-x-2" >{formattedTime.date}</td>
+                            <td className="border-x-2" >{formattedTime.time}</td>
+                            <td className="border-x-2" >{log.email}</td>
+                            <td className="border-x-2" >{log.ip}</td>
+                            <td className="border-x-2" >{log.success ? 'Yes' : 'No'}</td>
                         </tr>
                     );
                 })}
@@ -116,28 +121,28 @@ export function LogTableItem() {
 
 export function UserTableItem() {
     const [userList, setUserList] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchUsers() {
             try {
                 const user = await getUsers();
+                setLoading(false);
                 setUserList(user);
             } catch (err: any) {
+                setLoading(false);
                 setError(err.message);
             }
         }
         fetchUsers();
     }, []);
 
-    if (error) {
-        return <div>Error: {error}</div>;
-    }
-
-
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
 
     return (
-        <table>
+        <table className="w-full text-center mt-4 pr-4">
             <thead className="border-b-2">
                 <tr>
                     <th>Email</th>
@@ -168,6 +173,7 @@ export function UserTableItem() {
 
 export function LockTableItem() {
     const [lockList, setLockList] = useState<Lock[]>([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -175,19 +181,20 @@ export function LockTableItem() {
             try {
                 const lock = await getLocks();
                 setLockList(lock);
+                setLoading(false);
             } catch (err: any) {
                 setError(err.message);
+                setLoading(false);
             }
         }
         fetchLocks();
     }, []);
 
-    if (error) {
-        return <div>Error: {error}</div>;
-    }
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
 
     return (
-        <table>
+        <table className="w-full text-center mt-4 pr-4">
             <thead className="border-b-2">
                 <tr>
                     <th>Lock ID</th>
