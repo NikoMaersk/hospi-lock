@@ -19,7 +19,7 @@ const routes = express();
 routes.use(cookieParser());
 
 let corsOptions = { 
-  origin: ['http://10.176.69.180:3000', 'http://localhost:3000'],
+  origin: [`http://${process.env.WEB_IP}:${process.env.WEB_PORT}`, 'http://localhost:3000'],
   credentials: true
 } 
 
