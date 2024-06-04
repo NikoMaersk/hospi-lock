@@ -175,16 +175,26 @@ export function LockTableItem() {
     const [lockList, setLockList] = useState<Lock[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [ip, setIp] = useState('');
 
-    const handlePost = async () => {
-        const res = await fetch('http://localhost:4000/locks', {
-            method: 'POST',
-            credentials: 'include',
-        });
-        if (!res.ok) {
-            throw new Error('Failed to post lock');
+    const handlePost = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        try {
+            const res = await fetch('http://localhost:4000/locks', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ip })
+            });
+            if (!res.ok) {
+                throw new Error('Failed to post lock');
+            }
+            return res.json();
+        } catch (error) {
+            console.error('Error posting lock:', error);
         }
-        return res.json;
     }
 
     useEffect(() => {
@@ -209,8 +219,9 @@ export function LockTableItem() {
             <div className="w-full flex flex-col flex-shrink-0 items-end justify-center">
                 <label htmlFor="ip" className="">Register new lock</label>
                 <form onSubmit={handlePost} className="flex">
-                    <input id="IP" placeholder="eg. 10.176.69.22" type="input" required minLength={11} className="text-sm w-[10rem] text-center h-10 py-2 outline-none
-                     border border-secondary-border rounded-l-md px-2 focus:border-red-600 hover:border-red-600" />
+                    <input id="IP" placeholder="eg. 10.176.69.22" type="input" required minLength={11} value={ip} onChange={(e) => setIp(e.target.value)}
+                        className="text-sm w-[10rem] text-center h-10 py-2 outline-none 
+                        border border-secondary-border rounded-l-md px-2 focus:border-red-600 hover:border-red-600" />
                     <button type="submit" className="rounded-r-md border border-secondary-border h-10 border-l-0 px-3 hover:bg-red-600 font-semibold hover:text-white text-sm">Register</button>
                 </form>
             </div>
