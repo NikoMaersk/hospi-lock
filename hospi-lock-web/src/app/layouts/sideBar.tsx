@@ -3,7 +3,8 @@
 import { ElementType } from "react";
 import { twMerge } from "tailwind-merge";
 import { buttonStyles } from "../components/Button";
-import { Home, LineChart, LockOpen, ScrollText, User } from "lucide-react";
+import { LayoutDashboard, LineChart, LockOpen, ScrollText, User } from "lucide-react";
+import Link from "next/link";
 
 
 export default function Sidebar() {
@@ -12,11 +13,21 @@ export default function Sidebar() {
         <aside
             className={`sticky top-0 overflow-y-auto scrollbar-hidden pb-4 pt-1
             flex flex-col ml-1 lg:flex`}>
-            <SmallsidebarItem Icon={Home} title="Home" url="/" />
-            <SmallsidebarItem Icon={User} title="Users" url="/users" />
-            <SmallsidebarItem Icon={ScrollText} title="Logs" url="/logs" />
-            <SmallsidebarItem Icon={LockOpen} title="Locks" url="/locks" />
-            <SmallsidebarItem Icon={LineChart} title="Analytics" url="/analytics" />
+            <Link href="/admin/dashboard" passHref>
+                <SmallsidebarItem Icon={LayoutDashboard} title="Dashboard" />
+            </Link>
+            <Link href="/admin/users" passHref>
+                <SmallsidebarItem Icon={User} title="Users" />
+            </Link>
+            <Link href="/admin/locks" passHref>
+                <SmallsidebarItem Icon={LockOpen} title="Locks" />
+            </Link>
+            <Link href="/admin/logs" passHref>
+                <SmallsidebarItem Icon={ScrollText} title="Logs" />
+            </Link>
+            <Link href="/admin/analytics" passHref>
+                <SmallsidebarItem Icon={LineChart} title="Analytics" />
+            </Link>
         </aside>
     );
 }
@@ -24,15 +35,14 @@ export default function Sidebar() {
 interface SmallSidebarProps {
     Icon: ElementType,
     title: string,
-    url: string
 }
 
-function SmallsidebarItem({ Icon, title, url }: SmallSidebarProps) {
-    
+function SmallsidebarItem({ Icon, title }: SmallSidebarProps) {
+
 
     return (
-        <a href={url} className={twMerge(buttonStyles({ variant: "ghost", size: "icon" }), 
-        " px-1 py-4 flex flex-row items-center rounded-lg gap-4 w-40 hover:text-red-600")}>
+        <a className={twMerge(buttonStyles({ variant: "ghost", size: "icon" }),
+            " px-1 py-4 flex flex-row items-center rounded-lg gap-4 w-40 hover:text-red-600")}>
             <Icon className="w-8 h-6 ml-4" />
             <h1 className="text-sm">{title}</h1>
         </a>

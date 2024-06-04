@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { formatEpochTime } from "../helper/formatTime";
 
 async function getLogs(): Promise<Log[]> {
@@ -16,16 +16,25 @@ async function getLogs(): Promise<Log[]> {
 
 
 async function getUsers(): Promise<User[]> {
-    const res = await fetch('http//localhost:4000/users');
+    const res = await fetch('http://localhost:4000/users', {
+        method: 'GET',
+        credentials: 'include',
+    });
     if (!res.ok) {
         throw new Error('Failed to fetch users');
     }
-    return res.json();
+    const data: Record<string, User> = await res.json();
+    const users: User[] = Object.values(data);
+    console.log(users);
+    return users;
 }
 
 
 async function getLocks(): Promise<Lock[]> {
-    const res = await fetch('http://localhost:4000/locks');
+    const res = await fetch('http://localhost:4000/logs/lock', {
+        method: 'GET',
+        credentials: 'include',
+    });
     if (!res.ok) {
         throw new Error('Failed to fetch locks');
     }
@@ -34,35 +43,26 @@ async function getLocks(): Promise<Lock[]> {
 
 
 interface Log {
-    timestamp: string,
-    email: string,
-    ip: string,
-    success: boolean,
+    timestamp: string;
+    email: string;
+    ip: string;
+    success: boolean;
 }
 
 
 interface User {
-    email: string,
-    firstName: string,
-    lastName: string,
-    registrationDate: string,
-    lockId: string
+    email: string;
+    firstName: string;
+    lastName: string;
+    date: string;
+    lockId: string;
 }
 
 
 interface Lock {
-    id: number,
-    ip: string,
-    status: number
-}
-
-
-export default function DataTable({ }) {
-    return (
-        <div>
-            <LogTableItem></LogTableItem>
-        </div>
-    );
+    id: number;
+    ip: string;
+    status: number;
 }
 
 
@@ -74,7 +74,7 @@ export function LogTableItem() {
     useEffect(() => {
         async function fetchLogs() {
             try {
-                const logs = await getLogs();
+                const logs: Log[] = await getLogs();
                 setLoading(false);
                 setLogList(logs);
             } catch (err: any) {
@@ -127,16 +127,17 @@ export function UserTableItem() {
     useEffect(() => {
         async function fetchUsers() {
             try {
-                const user = await getUsers();
-                setLoading(false);
-                setUserList(user);
+                const users: User[] = await getUsers();
+                setUserList(users);
             } catch (err: any) {
-                setLoading(false);
                 setError(err.message);
+            } finally {
+                setLoading(false);
             }
         }
         fetchUsers();
     }, []);
+
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -155,12 +156,12 @@ export function UserTableItem() {
             <tbody>
                 {userList.map((user: User, index: number) => {
                     return (
-                        <tr className="border-b-2" key={index}>
-                            <td>{user.email}</td>
-                            <td>{user.firstName}</td>
-                            <td>{user.lastName}</td>
-                            <td>{user.registrationDate}</td>
-                            <td>{user.lockId}</td>
+                        <tr className="border-b-2 border-x-2" key={index}>
+                            <td className="border-x-2">{user.email}</td>
+                            <td className="border-x-2">{user.firstName}</td>
+                            <td className="border-x-2">{user.lastName}</td>
+                            <td className="border-x-2">{new Date(user.date).toLocaleString()}</td>
+                            <td className="border-x-2">{user.lockId}</td>
                         </tr>
                     );
                 })}
@@ -170,16 +171,26 @@ export function UserTableItem() {
 }
 
 
-
 export function LockTableItem() {
     const [lockList, setLockList] = useState<Lock[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const handlePost = async () => {
+        const res = await fetch('http://localhost:4000/locks', {
+            method: 'POST',
+            credentials: 'include',
+        });
+        if (!res.ok) {
+            throw new Error('Failed to post lock');
+        }
+        return res.json;
+    }
+
     useEffect(() => {
         async function fetchLocks() {
             try {
-                const lock = await getLocks();
+                const lock: Lock[] = await getLocks();
                 setLockList(lock);
                 setLoading(false);
             } catch (err: any) {
@@ -194,25 +205,35 @@ export function LockTableItem() {
     if (error) return <div>Error: {error}</div>;
 
     return (
-        <table className="w-full text-center mt-4 pr-4">
-            <thead className="border-b-2">
-                <tr>
-                    <th>Lock ID</th>
-                    <th>IP</th>
-                    <th>Lock status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {lockList.map((lock: Lock, index: number) => {
-                    return (
-                        <tr className="border-b-2" key={index}>
-                            <td>{lock.id}</td>
-                            <td>{lock.ip}</td>
-                            <td>{lock.status}</td>
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
+        <div className="flex flex-col gap-1 mt-4" >
+            <div className="w-full flex flex-col flex-shrink-0 items-end justify-center">
+                <label htmlFor="ip" className="">Register new lock</label>
+                <form onSubmit={handlePost} className="flex">
+                    <input id="IP" placeholder="eg. 10.176.69.22" type="input" required minLength={11} className="text-sm w-[10rem] text-center h-10 py-2 outline-none
+                     border border-secondary-border rounded-l-md px-2 focus:border-red-600" />
+                    <button type="submit" className="rounded-r-md border border-secondary-border h-10 border-l-0 px-3 hover:bg-red-600 font-semibold hover:text-white text-sm">Register</button>
+                </form>
+            </div>
+            <table className="text-center mt-2 pr-4">
+                <thead className="border-b-2">
+                    <tr>
+                        <th>Lock ID</th>
+                        <th>IP</th>
+                        <th>Lock status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {lockList.map((lock: Lock, index: number) => {
+                        return (
+                            <tr className="border-b-2" key={index}>
+                                <td>{lock.id}</td>
+                                <td>{lock.ip}</td>
+                                <td>{lock.status}</td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
     );
 }
