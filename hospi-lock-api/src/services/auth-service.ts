@@ -107,7 +107,6 @@ export default class AuthService {
 
     static verifyToken = (req: Request, res: Response, next: NextFunction) => {
         const token = req.cookies.access_token;
-        console.log(`token: ${token}`);
         if (!token) {
             console.log('No token provided in cookies');
             return res.status(403).send('No token provided');

@@ -478,7 +478,7 @@ routes.post('/admin/auth', AuthService.verifyToken, AuthService.checkRole(Role.A
 
   const {password, ...adminWithoutPassword} = adminRequest.user;
 
-  console.log(`Admin authenticated: ${adminWithoutPassword}`);
+  console.log(`Admin authenticated: ${adminWithoutPassword.email}`);
 
   return res.status(200).json(adminWithoutPassword);
 });
