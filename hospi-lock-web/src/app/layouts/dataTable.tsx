@@ -3,8 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { formatEpochTime } from "../helper/formatTime";
 
+const SERVER_IP = process.env.SERVER_IP || 'localhost';
+const PORT = process.env.SERVER_PORT || '4000';
+
 async function getLogs(): Promise<Log[]> {
-    const res = await fetch('http://localhost:4000/logs/signin', {
+
+    const res = await fetch(`http://${SERVER_IP}:${PORT}/logs/signin`, {
         method: 'GET',
         credentials: 'include',
     });
@@ -16,7 +20,7 @@ async function getLogs(): Promise<Log[]> {
 
 
 async function getUsers(): Promise<User[]> {
-    const res = await fetch('http://localhost:4000/users', {
+    const res = await fetch(`http://${SERVER_IP}:${PORT}/users`, {
         method: 'GET',
         credentials: 'include',
     });
@@ -31,7 +35,7 @@ async function getUsers(): Promise<User[]> {
 
 
 async function getLocks(): Promise<Lock[]> {
-    const res = await fetch('http://localhost:4000/logs/lock', {
+    const res = await fetch(`http://${SERVER_IP}:${PORT}/logs/lock`, {
         method: 'GET',
         credentials: 'include',
     });

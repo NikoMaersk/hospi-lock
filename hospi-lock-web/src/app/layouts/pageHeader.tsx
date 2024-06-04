@@ -24,7 +24,10 @@ export default function PageHeader() {
 
     const handleLogin = async (email: string, password: string) => {
         try {
-            const response = await fetch('http://10.176.69.180:4000/admin/signin', {
+            const SERVER_IP = process.env.SERVER_IP || 'localhost';
+            const PORT = process.env.SERVER_PORT || '4000';
+
+            const response = await fetch(`http://${SERVER_IP}:${PORT}/admin/signin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
