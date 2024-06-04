@@ -17,10 +17,6 @@ const cookieParser = require("cookie-parser");
 const routes = express();
 
 routes.use(cookieParser());
-routes.use(cors({
-  origin: 'http://10.176.69.180:3000',
-  credentials: true
-}));
 routes.use(express.static("public"));
 routes.use(bodyParser.urlencoded({ extended: false }));
 routes.use(bodyParser.json());
