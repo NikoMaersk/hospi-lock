@@ -18,7 +18,7 @@ const routes = express();
 
 routes.use(cookieParser());
 routes.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'http://10.176.69.180:3000',
   credentials: true
 }));
 routes.use(express.static("public"));
