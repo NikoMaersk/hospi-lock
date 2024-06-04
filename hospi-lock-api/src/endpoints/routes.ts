@@ -1,7 +1,7 @@
 import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
-import { User } from '../models/User.js';
+import { User } from '../models/user.js';
 import LockController, { LOCKING } from '../services/lock-controller.js';
 import LogService, { LogRequest } from '../services/database/log-service.js';
 import AuthService, { Role } from '../services/auth-service.js';

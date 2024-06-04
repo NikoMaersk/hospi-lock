@@ -1,5 +1,5 @@
 import { RedisClientDb0 } from "./database-service";
-import { User, UserRequest } from "../../models/User";
+import { User, UserRequest } from "../../models/user";
 
 export default class UserService {
     static async getUserByEmailAsync(email: string): Promise<UserRequest> {

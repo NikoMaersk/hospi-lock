@@ -1,8 +1,8 @@
-import { User } from "../models/User";
+import { User } from "../models/user";
 import Admin from "../models/admin";
 import { RedisClientDb0, RedisClientDb1 } from "./database/database-service";
 import { AdminRequest } from "../models/admin";
-import { UserRequest } from "../models/User";
+import { UserRequest } from "../models/user";
 import { NextFunction, Request, Response } from "express";
 
 const jwt = require('jsonwebtoken');
