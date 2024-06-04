@@ -1,4 +1,4 @@
-import { RedisClientDb0 } from "../database-service";
+import { RedisClientDb0 } from "./database-service";
 import Lock from "../../models/lock";
 import AuthService from "../auth-service";
 

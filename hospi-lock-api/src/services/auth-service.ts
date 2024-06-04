@@ -1,6 +1,6 @@
 import { User } from "../models/User";
 import Admin from "../models/admin";
-import { RedisClientDb0, RedisClientDb1 } from "./database-service";
+import { RedisClientDb0, RedisClientDb1 } from "./database/database-service";
 import { AdminRequest } from "../models/admin";
 import { UserRequest } from "../models/User";
 import { NextFunction, Request, Response } from "express";

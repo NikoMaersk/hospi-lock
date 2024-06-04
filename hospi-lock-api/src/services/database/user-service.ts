@@ -1,4 +1,4 @@
-import { RedisClientDb0 } from "../database-service";
+import { RedisClientDb0 } from "./database-service";
 import { User, UserRequest } from "../../models/User";
 
 export default class UserService {

@@ -1,5 +1,5 @@
 import { Log } from "../../models/log";
-import { RedisClientDb1 } from "../database-service";
+import { RedisClientDb1 } from "./database-service";
 
 export interface LogRequest {
     success: boolean,

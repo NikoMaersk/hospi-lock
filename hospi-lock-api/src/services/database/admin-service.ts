@@ -1,4 +1,4 @@
-import { RedisClientDb1 } from "../database-service";
+import { RedisClientDb1 } from "./database-service";
 import Admin, { AdminRequest } from "../../models/admin";
 import AuthService, { Role } from "../auth-service";
 
