@@ -210,7 +210,7 @@ export function LockTableItem() {
                 <label htmlFor="ip" className="">Register new lock</label>
                 <form onSubmit={handlePost} className="flex">
                     <input id="IP" placeholder="eg. 10.176.69.22" type="input" required minLength={11} className="text-sm w-[10rem] text-center h-10 py-2 outline-none
-                     border border-secondary-border rounded-l-md px-2 focus:border-red-600" />
+                     border border-secondary-border rounded-l-md px-2 focus:border-red-600 hover:border-red-600" />
                     <button type="submit" className="rounded-r-md border border-secondary-border h-10 border-l-0 px-3 hover:bg-red-600 font-semibold hover:text-white text-sm">Register</button>
                 </form>
             </div>

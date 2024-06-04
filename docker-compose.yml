@@ -42,5 +42,15 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
 
+  web:
+    build: ./hospi-lock-web
+    ports:
+      - "3000:3000"
+    container_name: web-client
+    depends_on:
+      - api
+    environment:
+    - NEXT_PUBLIC_API_URL=http://api:4000
+
 volumes:
   redis-server-data:
