@@ -2,15 +2,15 @@ import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
 import { User } from '../models/user.js';
-import LockController, { LOCKING } from '../services/lock-controller.js';
-import LogService, { LogRequest } from '../services/database/log-service.js';
+import LockController, { Locking } from '../services/lock-controller.js';
 import AuthService, { Role } from '../services/auth-service.js';
-import Lock from '../models/lock.js';
+import { Lock, LockRequest } from '../models/lock.js';
 import UserService from '../services/database/user-service.js';
-import LockService, { LockRequest } from '../services/database/lock-service.js';
-import Admin, { AdminRequest } from '../models/admin.js';
+import LockService from '../services/database/lock-service.js';
+import LogService from '../services/database/log-service.js';
+import { Admin, AdminRequest } from '../models/admin.js';
 import AdminService from '../services/database/admin-service.js';
-import { Log } from '../models/log.js';
+import { Log, LogRequest } from '../models/log.js';
 
 const cookieParser = require("cookie-parser");
 
@@ -18,10 +18,10 @@ const routes = express();
 
 routes.use(cookieParser());
 
-let corsOptions = { 
+let corsOptions = {
   origin: [`http://${process.env.WEB_IP}:${process.env.WEB_PORT}`, 'http://localhost:3000'],
   credentials: true
-} 
+}
 
 routes.use(cors(corsOptions));
 routes.use(express.static("public"));
@@ -118,7 +118,7 @@ routes.post('/signin', async (req, res) => {
   try {
     const ipAddress: string = req.headers['x-forwarded-for']?.[0] || req.socket.remoteAddress || "unknown";
 
-    const authResult = await AuthService.AuthenticationAsync(email, password, Role.USER);
+    const authResult = await AuthService.authenticationAsync(email, password, Role.USER);
 
     const logSuccess = await LogService.logSigninMessageAsync(email, authResult.success, ipAddress);
 
@@ -263,7 +263,7 @@ routes.post('/locks/unlock/:email', AuthService.verifyToken, async (req, res) =>
   const { email } = req.params;
 
   try {
-    const isSuccess = await LockController.lockingAsync(email, LOCKING.UNLOCK);
+    const isSuccess = await LockController.lockingAsync(email, Locking.UNLOCK);
 
     if (!isSuccess) {
       return res.status(400).send(isSuccess.message);
@@ -283,7 +283,7 @@ routes.post('/locks/lock/:email', AuthService.verifyToken, async (req, res) => {
   const { email } = req.params;
 
   try {
-    const isSuccess = await LockController.lockingAsync(email, LOCKING.LOCK);
+    const isSuccess = await LockController.lockingAsync(email, Locking.LOCK);
 
     if (!isSuccess) {
       return res.status(400).send(isSuccess.message);
@@ -334,7 +334,7 @@ routes.post('/admin/signin', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const authResult = await AuthService.AuthenticationAsync(email, password, Role.ADMIN);
+    const authResult = await AuthService.authenticationAsync(email, password, Role.ADMIN);
 
     console.log(`Admin signin: ${authResult.success}, message: ${authResult.message}`);
 
@@ -453,7 +453,7 @@ routes.post('/logs', async (req, res) => {
 
   try {
 
-    const logRequest: LogRequest = await LogService.logLockingMessage(timestamp, ip, status);
+    const logRequest: LogRequest = await LogService.logLockingMessageAsync(timestamp, ip, status);
 
     if (!logRequest.success) {
       return res.status(500).send(logRequest.message)
@@ -479,7 +479,7 @@ routes.post('/admin/auth', AuthService.verifyToken, AuthService.checkRole(Role.A
     return res.status(adminRequest.statusCode).send(adminRequest.message);
   }
 
-  const {password, ...adminWithoutPassword} = adminRequest.user;
+  const { password, ...adminWithoutPassword } = adminRequest.user;
 
   console.log(`Admin authenticated: ${adminWithoutPassword.email}`);
 

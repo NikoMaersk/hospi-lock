@@ -1,12 +1,12 @@
 import { RedisClientDb1 } from "./database-service";
-import Admin, { AdminRequest } from "../../models/admin";
+import { Admin, AdminRequest } from "../../models/admin";
 import AuthService, { Role } from "../auth-service";
 
 export default class AdminService {
 
     static async addAdminAsync(admin: Admin): Promise<AdminRequest> {
         const lowerCaseEmail = admin.email.toLowerCase();
-        const request: AdminRequest = await AuthService.CheckAdminExistenceAsync(lowerCaseEmail);
+        const request: AdminRequest = await AuthService.checkAdminExistenceAsync(lowerCaseEmail);
 
         if (request.success) {
             return { success: false, message: 'Admin already registered', statusCode: 409 };
@@ -24,7 +24,7 @@ export default class AdminService {
     static async getAdminByEmailAsync(email: string): Promise<AdminRequest> {
         const lowerCaseEmail: string = email.toLowerCase();
 
-        const request: AdminRequest = await AuthService.CheckExistenceAsync(lowerCaseEmail, Role.ADMIN);
+        const request: AdminRequest = await AuthService.checkExistenceAsync(lowerCaseEmail, Role.ADMIN);
 
         return request;
     }

@@ -1,8 +1,6 @@
-import { User } from "../models/user";
-import Admin from "../models/admin";
+import { User, UserRequest } from "../models/user";
+import { Admin, AdminRequest } from "../models/admin";
 import { RedisClientDb0, RedisClientDb1 } from "./database/database-service";
-import { AdminRequest } from "../models/admin";
-import { UserRequest } from "../models/user";
 import { NextFunction, Request, Response } from "express";
 
 const jwt = require('jsonwebtoken');
@@ -14,10 +12,10 @@ export enum Role {
 }
 
 export default class AuthService {
-    static async AuthenticationAsync(email: string, password: string, role: Role): Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
+    static async authenticationAsync(email: string, password: string, role: Role): Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
 
         try {
-            const verifyResult = await AuthService.CheckExistenceAsync(email, role);
+            const verifyResult = await AuthService.checkExistenceAsync(email, role);
 
             if (!verifyResult.success) {
                 return { success: verifyResult.success, message: verifyResult.message, statusCode: verifyResult.statusCode };
@@ -38,13 +36,13 @@ export default class AuthService {
     }
 
 
-    static async CheckExistenceAsync(email: string, role: Role): Promise<UserRequest | AdminRequest> {
+    static async checkExistenceAsync(email: string, role: Role): Promise<UserRequest | AdminRequest> {
 
         if (!email) {
             return { success: false, message: 'Missing required field', statusCode: 400 };
         }
 
-        if (!this.EmailValidator(email)) {
+        if (!this.emailValidator(email)) {
             return { success: false, message: 'Not a valid email', statusCode: 400 };
         }
 
@@ -52,10 +50,10 @@ export default class AuthService {
 
         switch (role) {
             case Role.USER:
-                result = await this.CheckUserExistenceAsync(email);
+                result = await this.checkUserExistenceAsync(email);
                 break;
             case Role.ADMIN:
-                result = await this.CheckAdminExistenceAsync(email);
+                result = await this.checkAdminExistenceAsync(email);
                 break;
             default:
                 result = { success: false, message: 'Missing role', statusCode: 500 };
@@ -65,7 +63,7 @@ export default class AuthService {
     }
 
 
-    static async CheckUserExistenceAsync(email: string): Promise<UserRequest> {
+    static async checkUserExistenceAsync(email: string): Promise<UserRequest> {
 
         const tempUser = await RedisClientDb0.hGetAll(`user:${email.toLowerCase()}`);
         const userExists: boolean = tempUser && Object.keys(tempUser).length > 0;
@@ -87,7 +85,7 @@ export default class AuthService {
     }
 
 
-    static async CheckAdminExistenceAsync(email: string): Promise<AdminRequest> {
+    static async checkAdminExistenceAsync(email: string): Promise<AdminRequest> {
         const tempAdmin = await RedisClientDb1.hGetAll(`admin:${email}`);
 
         const adminExists: boolean = tempAdmin && Object.keys(tempAdmin).length > 0;
@@ -150,7 +148,7 @@ export default class AuthService {
     };
 
 
-    static EmailValidator(email: string) {
+    static emailValidator(email: string): boolean {
         const pattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,3}$/;
         return pattern.test(email);
     }

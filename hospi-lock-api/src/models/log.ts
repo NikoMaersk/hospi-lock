@@ -5,3 +5,10 @@ export interface Log {
     ip: string,
     success: boolean,
 }
+
+
+export interface LogRequest {
+    success: boolean,
+    message?: string,
+    log?: Log
+}

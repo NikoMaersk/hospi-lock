@@ -1,11 +1,5 @@
-import { Log } from "../../models/log";
+import { Log, LogRequest } from "../../models/log";
 import { RedisClientDb1 } from "./database-service";
-
-export interface LogRequest {
-    success: boolean,
-    message?: string,
-    log?: Log
-}
 
 export default class LogService {
     static async logSigninMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
@@ -90,7 +84,7 @@ export default class LogService {
     }
 
 
-    static async logLockingMessage(timestamp: string, ip: string, status: string): Promise<LogRequest> {
+    static async logLockingMessageAsync(timestamp: string, ip: string, status: string): Promise<LogRequest> {
         try {
             const logEntry = {
                 timestamp: timestamp,

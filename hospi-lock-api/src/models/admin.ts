@@ -1,5 +1,5 @@
 
-export default interface Admin {
+export interface Admin {
     email: string,
     password?: string,
 }

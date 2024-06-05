@@ -1,13 +1,6 @@
 import { RedisClientDb0 } from "./database-service";
-import Lock from "../../models/lock";
+import { Lock, LockRequest } from "../../models/lock";
 import AuthService from "../auth-service";
-
-export interface LockRequest {
-    success: boolean,
-    message: string,
-    statusCode: number,
-    lock?: Lock
-}
 
 export default class LockService {
 
@@ -15,7 +8,7 @@ export default class LockService {
 
         if (lock.email) {
             lock.email = lock.email.toLowerCase();
-            const authResult = await AuthService.CheckUserExistenceAsync(lock.email);
+            const authResult = await AuthService.checkUserExistenceAsync(lock.email);
 
             if (!authResult.success) {
                 return {
@@ -81,7 +74,7 @@ export default class LockService {
 
     static async getLockByEmail(email: string): Promise<LockRequest> {
         const lowerCaseEmail = email.toLowerCase();
-        const authResult = await AuthService.CheckUserExistenceAsync(lowerCaseEmail);
+        const authResult = await AuthService.checkUserExistenceAsync(lowerCaseEmail);
 
         if (!authResult.success) {
             return {
@@ -129,7 +122,7 @@ export default class LockService {
 
 
     static async addLockForUserAsync(email: string, id: string): Promise<LockRequest> {
-        const authResult = await AuthService.CheckUserExistenceAsync(email);
+        const authResult = await AuthService.checkUserExistenceAsync(email);
 
         if (!authResult.success) {
             return {

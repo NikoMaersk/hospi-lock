@@ -1,7 +1,7 @@
-import Lock from "../models/lock";
-import LockService, { LockRequest } from "./database/lock-service";
+import { Lock, LockRequest } from "../models/lock";
+import LockService from "./database/lock-service";
 
-export enum LOCKING {
+export enum Locking {
     LOCK,
     UNLOCK,
 }
@@ -10,14 +10,14 @@ export default class LockController {
 
     private static PORT: string = process.env.PORT;
 
-    static async lockingAsync(email: string, lock: LOCKING): Promise<{ success: boolean, message: string | unknown }> {
+    static async lockingAsync(email: string, lock: Locking): Promise<{ success: boolean, message: string | unknown }> {
         const lockRequest: LockRequest = await LockService.getLockByEmail(email);
         const tempLock: Lock = lockRequest.lock;
-        
+
         if (!tempLock) {
-            return { success: false, message: 'Could not get associated lock'}
+            return { success: false, message: 'Could not get associated lock' }
         }
-        
+
         const IP: string = tempLock.ip;
 
         if (!IP || IP.trim() === "") {
@@ -27,10 +27,10 @@ export default class LockController {
         let endpoint: string = '';
 
         switch (lock) {
-            case LOCKING.LOCK:
+            case Locking.LOCK:
                 endpoint = 'lock';
                 break;
-            case LOCKING.UNLOCK:
+            case Locking.UNLOCK:
                 endpoint = 'unlock';
                 break;
             default:
