@@ -80,12 +80,9 @@ export default function PageHeader() {
         <div className="flex justify-between items-center w-full py-3 shadow-md gap-2">
             <ModalLogin show={isModalOpen} onClose={toggleModal} onSignIn={handleLogin} />
             {!showFullWidthSearch && (
-                <nav className="flex flex-shrink-0 md:gap-4 px-4">
-                    <Button variant="ghost">
-                        <Menu />
-                    </Button>
-                    <a href="/" className="ml-4">
-                        <Image src={logo} alt="logo" className="h-12 w-32 items-center" />
+                <nav className="flex flex-shrink-0 md:gap-4 px-4 items-center">
+                    <a href="/" className="ml-2">
+                        <Image src={logo} alt="logo" className=" w-[40%]" />
                     </a>
                 </nav>)}
             {isLoggedIn && (
@@ -122,9 +119,10 @@ export default function PageHeader() {
                 </form>
             )}
             <div className="flex-shrink-0 md:gap-2 flex items-center mr-4">
-                <Button variant="ghost" className={`md:hidden ${showFullWidthSearch ? "hidden" : ""}`} onClick={() => setShowFullWidthSearch(true)}>
-                    <Search />
-                </Button>
+                {isLoggedIn &&
+                    <Button variant="ghost" className={`md:hidden ${showFullWidthSearch ? "hidden" : ""}`} onClick={() => setShowFullWidthSearch(true)}>
+                        <Search />
+                    </Button> }
                 <Button variant="ghost" className={`${showFullWidthSearch ? "hidden" : ""}`} >
                     <HelpCircle />
                 </Button>
