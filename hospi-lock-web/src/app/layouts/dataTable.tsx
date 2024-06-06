@@ -153,18 +153,19 @@ export function UserTableItem() {
                     <th>Email</th>
                     <th>First name</th>
                     <th>Last name</th>
-                    <th>Registration date</th>
+                    <th>Registration datetime</th>
                     <th>Registered lock</th>
                 </tr>
             </thead>
             <tbody>
                 {userList.map((user: User, index: number) => {
+                    const formattedTime = formatEpochTime(new Date(user.date));
                     return (
                         <tr className="border-b-2 border-x-2" key={index}>
                             <td className="border-x-2">{user.email}</td>
                             <td className="border-x-2">{user.firstName}</td>
                             <td className="border-x-2">{user.lastName}</td>
-                            <td className="border-x-2">{new Date(user.date).toLocaleString()}</td>
+                            <td className="border-x-2">{formattedTime.date} {formattedTime.time}</td>
                             <td className="border-x-2">{user.lockId}</td>
                         </tr>
                     );
