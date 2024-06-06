@@ -24,7 +24,7 @@ export default function PageHeader() {
 
     const handleLogin = async (email: string, password: string) => {
         try {
-            const SERVER_IP = process.env.SERVER_IP || 'localhost';
+            const SERVER_IP = '10.176.69.180';
             const PORT = process.env.SERVER_PORT || '4000';
 
             const response = await fetch(`http://${SERVER_IP}:${PORT}/admin/signin`, {

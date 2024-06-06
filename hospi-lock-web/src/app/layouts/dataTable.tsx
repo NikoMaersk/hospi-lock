@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { formatEpochTime } from "../helper/formatTime";
 
-const SERVER_IP = process.env.SERVER_IP || 'localhost';
+const SERVER_IP = '10.176.69.180';
 const PORT = process.env.SERVER_PORT || '4000';
 
 async function getLogs(): Promise<Log[]> {
