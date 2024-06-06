@@ -1,11 +1,11 @@
 'use client';
 
-import { Bell, HelpCircle, Menu, Search, ArrowLeft, Moon, Sun } from "lucide-react";
+import { Bell, HelpCircle, Search, ArrowLeft } from "lucide-react";
 import { Button, buttonStyles } from "../components/Button";
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { twMerge } from "tailwind-merge";
-import logo from "../assets/Logo.png"
 import Image from "next/image";
+import logo from "../assets/logo.png"
 import ThemeSwitch from "../components/ThemeSwitch";
 import ModalLogin from "../components/modalLogin";
 import { useAuth } from "../helper/authContext";

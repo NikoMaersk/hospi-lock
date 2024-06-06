@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Hospi lock",
   description: "",
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({
