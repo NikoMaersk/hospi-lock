@@ -1,6 +1,6 @@
 import { RedisClientDb1 } from "./database-service";
 import { Admin, AdminRequest } from "../../models/admin";
-import { IRoleService } from "../roleService";
+import { IRoleService } from "../interfaces/role-service";
 
 export default class AdminService implements IRoleService<Admin> {
 
@@ -26,7 +26,11 @@ export default class AdminService implements IRoleService<Admin> {
 
         const request = await this.checkExistenceAsync(lowerCaseEmail);
 
-        return request;
+        if (!request.success) {
+            return { success: request.success, message: 'No registered admin with that email', statusCode: 400 }
+        }
+
+        return {success: request.success, message: 'Admin fetched', statusCode: 200, admin: request.role};
     }
 
 

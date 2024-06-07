@@ -1,6 +1,6 @@
 import { RedisClientDb0 } from "./database-service";
 import { User, UserRequest } from "../../models/user";
-import { IRoleService } from "../roleService";
+import { IRoleService } from "../interfaces/role-service";
 
 export default class UserService implements IRoleService<User> {
     

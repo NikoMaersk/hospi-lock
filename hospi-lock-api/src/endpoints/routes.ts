@@ -11,7 +11,7 @@ import LogService from '../services/database/log-service.js';
 import { Admin, AdminRequest } from '../models/admin.js';
 import AdminService from '../services/database/admin-service.js';
 import { Log, LogRequest } from '../models/log.js';
-import { ServiceFactory } from '../services/serviceFactory.js';
+import { ServiceFactory } from '../services/service-factory.js';
 
 const cookieParser = require("cookie-parser");
 
@@ -349,14 +349,14 @@ routes.post('/admin/signin', async (req, res) => {
     console.log(`Admin signin: ${authResult.success}, message: ${authResult.message}`);
 
     if (!authResult.success) {
-      return res.status(authResult.statusCode).send(authResult.message);
+      return res.status(400).send(authResult.message);
     }
 
     const token = authService.generateToken(email, Role.ADMIN);
 
     return res
       .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: parseInt(process.env.JWT_EXPIRATION_TIME, 10) })
-      .status(authResult.statusCode)
+      .status(200)
       .send({ message: authResult.message });
   } catch (error) {
     console.error('Error:', error);
@@ -392,13 +392,23 @@ routes.get('/admin', authService.verifyToken, authService.checkRole(Role.ADMIN),
 routes.get('/admin/:email', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const { email } = req.params;
 
-  const request: AdminRequest = await adminService.getAdminByEmailAsync(email);
-
-  if (!request.success) {
-    return res.status(request.statusCode).send(request.message);
+  if (!email) {
+    return res.status(400).send('Missing required fields');
   }
 
-  return res.status(200).json(request.user);
+  try {
+    const request: AdminRequest = await adminService.getAdminByEmailAsync(email);
+
+    if (!request.success) {
+      return res.status(request.statusCode).send(request.message);
+    }
+
+    return res.status(200).json(request.admin);
+  } catch (error) {
+    const errorMessage = 'Internal server error';
+    console.error(`${errorMessage} : `, error);
+    return res.status(500).send(errorMessage);
+  }
 });
 
 
@@ -489,7 +499,7 @@ routes.post('/admin/auth', authService.verifyToken, authService.checkRole(Role.A
     return res.status(adminRequest.statusCode).send(adminRequest.message);
   }
 
-  const { password, ...adminWithoutPassword } = adminRequest.user;
+  const { password, ...adminWithoutPassword } = adminRequest.admin;
 
   console.log(`Admin authenticated: ${adminWithoutPassword.email}`);
 

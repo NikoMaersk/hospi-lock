@@ -1,7 +1,7 @@
 import { User } from "../models/user";
 import { Admin } from "../models/admin";
 import { NextFunction, Request, Response } from "express";
-import { IRoleService } from "./roleService";
+import { IRoleService } from "./interfaces/role-service";
 import { BaseRole } from "../models/baseRole";
 
 const jwt = require('jsonwebtoken');
