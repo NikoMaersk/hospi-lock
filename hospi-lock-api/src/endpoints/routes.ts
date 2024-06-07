@@ -11,6 +11,7 @@ import LogService from '../services/database/log-service.js';
 import { Admin, AdminRequest } from '../models/admin.js';
 import AdminService from '../services/database/admin-service.js';
 import { Log, LogRequest } from '../models/log.js';
+import { ServiceFactory } from '../services/serviceFactory.js';
 
 const cookieParser = require("cookie-parser");
 
@@ -28,13 +29,14 @@ routes.use(express.static("public"));
 routes.use(bodyParser.urlencoded({ extended: false }));
 routes.use(bodyParser.json());
 
-const userService = new UserService();
-const adminService = new AdminService();
+const serviceFactory: ServiceFactory = ServiceFactory.getInstance();
 
-const lockService = new LockService(userService);
-const lockController = new LockController(lockService);
-
-const authService = new AuthService(userService, adminService);
+const userService: UserService = serviceFactory.getUserService();
+const adminService: AdminService = serviceFactory.getAdminService();
+const lockService: LockService = serviceFactory.getLockService();
+const logService: LogService = serviceFactory.getLogInstance();
+const authService: AuthService = serviceFactory.getAuthService();
+const lockController: LockController = serviceFactory.getLockController();
 
 
 // Create new user
@@ -128,7 +130,7 @@ routes.post('/signin', async (req, res) => {
 
     const authResult = await authService.authenticationAsync(email, password, Role.USER);
 
-    const logSuccess = await LogService.logSigninMessageAsync(email, authResult.success, ipAddress);
+    const logSuccess = await logService.logSigninMessageAsync(email, authResult.success, ipAddress);
 
     if (!authResult.success) {
       return res.status(authResult.statusCode).send(authResult.message);
@@ -409,9 +411,9 @@ routes.get('/logs/lock', authService.verifyToken, authService.checkRole(Role.ADM
     let logRequest: Log[] = null;
 
     if (offset || limit) {
-      logRequest = await LogService.getPartialLockingLogsAsync(offset, limit);
+      logRequest = await logService.getPartialLockingLogsAsync(offset, limit);
     } else {
-      logRequest = await LogService.getAllLockingLogsAsync();
+      logRequest = await logService.getAllLockingLogsAsync();
     }
 
     return res.status(200).json(logRequest);
@@ -433,9 +435,9 @@ routes.get('/logs/signin', authService.verifyToken, authService.checkRole(Role.A
     let logRequest: Log[] = null;
 
     if (offset || limit) {
-      logRequest = await LogService.getPartialSigninLogsAsync(offset, limit);
+      logRequest = await logService.getPartialSigninLogsAsync(offset, limit);
     } else {
-      logRequest = await LogService.getAllSigninLogsAsync();
+      logRequest = await logService.getAllSigninLogsAsync();
     }
 
     return res.status(200).json(logRequest);
@@ -461,7 +463,7 @@ routes.post('/logs', async (req, res) => {
 
   try {
 
-    const logRequest: LogRequest = await LogService.logLockingMessageAsync(timestamp, ip, status);
+    const logRequest: LogRequest = await logService.logLockingMessageAsync(timestamp, ip, status);
 
     if (!logRequest.success) {
       return res.status(500).send(logRequest.message)

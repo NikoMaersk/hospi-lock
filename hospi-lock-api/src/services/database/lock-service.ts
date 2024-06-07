@@ -6,11 +6,11 @@ export default class LockService {
 
     userService: UserService;
 
-    constructor(userService: UserService) {
+    public constructor(userService: UserService) {
         this.userService = userService;
     }
 
-    async addLockAsync(lock: Lock): Promise<LockRequest> {
+    public async addLockAsync(lock: Lock): Promise<LockRequest> {
 
         if (lock.email) {
             lock.email = lock.email.toLowerCase();
@@ -39,7 +39,7 @@ export default class LockService {
     }
 
 
-    async getAllLocksAsync(): Promise<Record<string, Lock>> {
+    public async getAllLocksAsync(): Promise<Record<string, Lock>> {
         try {
             const keys = await RedisClientDb0.keys('lock:*')
             const allHashes: Record<string, Lock> = {};
@@ -67,7 +67,7 @@ export default class LockService {
     }
 
 
-    async getLockByIdAsync(id: string): Promise<LockRequest> {
+    public async getLockByIdAsync(id: string): Promise<LockRequest> {
         const lock = await RedisClientDb0.hGetAll(`lock:${id}`);
 
         if (Object.keys(lock).length === 0) {
@@ -78,7 +78,7 @@ export default class LockService {
     }
 
 
-    async getLockByEmail(email: string): Promise<LockRequest> {
+    public async getLockByEmail(email: string): Promise<LockRequest> {
         const lowerCaseEmail = email.toLowerCase();
         const authResult = await this.userService.checkExistenceAsync(lowerCaseEmail);
 
@@ -102,7 +102,7 @@ export default class LockService {
     }
 
 
-    async getLockStatusAsync(id: string): Promise<{ success: boolean, message: string, statusCode: number, lockStatus?: boolean }> {
+    public async getLockStatusAsync(id: string): Promise<{ success: boolean, message: string, statusCode: number, lockStatus?: boolean }> {
         const lockRequest: LockRequest = await this.getLockByIdAsync(id);
 
         if (!lockRequest.success) {
@@ -115,7 +115,7 @@ export default class LockService {
     }
 
 
-    async getLockIPAsync(email: string): Promise<string> {
+    public async getLockIPAsync(email: string): Promise<string> {
         const lockRequest: LockRequest = await this.getLockByEmail(email);
         let ip: string = "";
 
@@ -127,7 +127,7 @@ export default class LockService {
     }
 
 
-    async addLockForUserAsync(email: string, id: string): Promise<LockRequest> {
+    public async addLockForUserAsync(email: string, id: string): Promise<LockRequest> {
         const authResult = await this.userService.checkExistenceAsync(email);
 
         if (!authResult.success) {
@@ -164,7 +164,7 @@ export default class LockService {
     }
 
 
-    async setStatusAsync(lock: Lock, status: boolean): Promise<{ success: boolean, message: string, statusCode: number }> {
+    public async setStatusAsync(lock: Lock, status: boolean): Promise<{ success: boolean, message: string, statusCode: number }> {
         try {
 
             const newStatus = status ? 1 : 0;

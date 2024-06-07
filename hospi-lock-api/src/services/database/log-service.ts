@@ -2,11 +2,12 @@ import { Log, LogRequest } from "../../models/log";
 import { RedisClientDb1 } from "./database-service";
 
 export default class LogService {
-    static async logSigninMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
+    
+    public async logSigninMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
         try {
             const timestamp = Date.now();
 
-            const parsedIp = this.parseIPAddress(ip);
+            const parsedIp = LogService.parseIPAddress(ip);
 
             const logEntry = {
                 timestamp: timestamp.toString(),
@@ -34,7 +35,7 @@ export default class LogService {
     }
 
 
-    static async getAllSigninLogsAsync(): Promise<Log[]> {
+    public async getAllSigninLogsAsync(): Promise<Log[]> {
 
         try {
             const data = await RedisClientDb1.zRange('login_logs', 0, -1);
@@ -57,7 +58,7 @@ export default class LogService {
     }
 
 
-    static async getPartialSigninLogsAsync(offset: number, limit: number): Promise<Log[]> {
+    public async getPartialSigninLogsAsync(offset: number, limit: number): Promise<Log[]> {
 
         limit += offset - 1;
 
@@ -84,7 +85,7 @@ export default class LogService {
     }
 
 
-    static async logLockingMessageAsync(timestamp: string, ip: string, status: string): Promise<LogRequest> {
+    public async logLockingMessageAsync(timestamp: string, ip: string, status: string): Promise<LogRequest> {
         try {
             const logEntry = {
                 timestamp: timestamp,
@@ -107,7 +108,7 @@ export default class LogService {
     }
 
 
-    static async getAllLockingLogsAsync(): Promise<Log[]> {
+    public async getAllLockingLogsAsync(): Promise<Log[]> {
 
         try {
             const data = await RedisClientDb1.zRange('lock_logs', 0, -1);
@@ -130,7 +131,7 @@ export default class LogService {
     }
 
 
-    static async getPartialLockingLogsAsync(offset: number, limit: number): Promise<Log[]> {
+    public async getPartialLockingLogsAsync(offset: number, limit: number): Promise<Log[]> {
         
         limit += offset - 1;
 
@@ -155,7 +156,7 @@ export default class LogService {
     }
 
 
-    static parseIPAddress(ip: string): string {
+    public static parseIPAddress(ip: string): string {
 
         if (ip.startsWith('::ffff:')) {
             ip = ip.substring(7);

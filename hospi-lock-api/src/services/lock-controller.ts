@@ -9,13 +9,13 @@ export enum Locking {
 export default class LockController {
 
     private static PORT: string = process.env.PORT;
-    lockService;
+    private lockService;
 
-    constructor(lockService: LockService) {
+    public constructor(lockService: LockService) {
         this.lockService = lockService;
     }
 
-    async lockingAsync(email: string, lock: Locking): Promise<{ success: boolean, message: string | unknown }> {
+    public async lockingAsync(email: string, lock: Locking): Promise<{ success: boolean, message: string | unknown }> {
         const lockRequest: LockRequest = await this.lockService.getLockByEmail(email);
         const tempLock: Lock = lockRequest.lock;
 

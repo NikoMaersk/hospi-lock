@@ -17,14 +17,14 @@ export default class AuthService {
 
     private roleServices: Map<Role, IRoleService<BaseRole>>;
 
-    constructor(userService: IRoleService<User>, adminService: IRoleService<Admin>) {
+    public constructor(userService: IRoleService<User>, adminService: IRoleService<Admin>) {
         this.roleServices = new Map<Role, IRoleService<BaseRole>>();
         this.roleServices.set(Role.USER, userService);
         this.roleServices.set(Role.ADMIN, adminService);
     }
 
 
-    async authenticationAsync<T extends BaseRole>(email: string, password: string, role: Role):
+    public async authenticationAsync<T extends BaseRole>(email: string, password: string, role: Role):
         Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
 
         const roleService = this.roleServices.get(role) as IRoleService<T>;
@@ -49,7 +49,7 @@ export default class AuthService {
     }
 
 
-    verifyToken = (req: Request, res: Response, next: NextFunction) => {
+    public verifyToken = (req: Request, res: Response, next: NextFunction) => {
         const token = req.cookies.access_token;
         if (!token) {
             console.log('No token provided in cookies');
@@ -69,7 +69,7 @@ export default class AuthService {
     };
 
 
-    checkRole = (role: Role) => {
+    public checkRole = (role: Role) => {
         return (req, res, next) => {
             if (req.role !== role) {
                 console.log(`Access denied: role ${req.role} does not match ${role}`);
@@ -80,7 +80,7 @@ export default class AuthService {
     };
 
 
-    generateToken = (email: string, role: Role) => {
+    public generateToken = (email: string, role: Role) => {
         const payload = {
             email: email,
             role: role,
@@ -94,7 +94,7 @@ export default class AuthService {
     };
 
 
-    static emailValidator(email: string): boolean {
+    public static emailValidator(email: string): boolean {
         const pattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,3}$/;
         return pattern.test(email);
     }

@@ -3,18 +3,8 @@ import { User, UserRequest } from "../../models/user";
 import { IRoleService } from "../roleService";
 
 export default class UserService implements IRoleService<User> {
-
-    static instance;
-
-    constructor() {
-        if (!UserService.instance) {
-            UserService.instance = this;
-        }
-
-        return UserService.instance;
-    }
-
-    async getUserByEmailAsync(email: string): Promise<UserRequest> {
+    
+    public async getUserByEmailAsync(email: string): Promise<UserRequest> {
         const lowerCaseEmail = email.toLowerCase();
         const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
 
@@ -34,7 +24,7 @@ export default class UserService implements IRoleService<User> {
     }
 
     
-    async getAllUsersAsync(): Promise<Record<string, User>> {
+    public async getAllUsersAsync(): Promise<Record<string, User>> {
         try {
             const keys = await RedisClientDb0.keys("user:*");
             const allHashes: Record<string, User> = {};
@@ -63,7 +53,7 @@ export default class UserService implements IRoleService<User> {
     }
 
 
-    async getPartialUsersAsync(amount: number): Promise<Record<string, User>> {
+    public async getPartialUsersAsync(amount: number): Promise<Record<string, User>> {
         const cursor = 0;
         const pattern = 'user:*';
         const countAmount = amount;
@@ -91,7 +81,7 @@ export default class UserService implements IRoleService<User> {
     }
 
 
-    async addUserAsync(user: User): Promise<UserRequest> {
+    public async addUserAsync(user: User): Promise<UserRequest> {
         const lowerCaseEmail = user.email.toLowerCase();
         const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
 
@@ -116,7 +106,7 @@ export default class UserService implements IRoleService<User> {
     }
 
 
-    async patchPasswordAsync(email: string, newPassword: string): Promise<UserRequest> {
+    public async patchPasswordAsync(email: string, newPassword: string): Promise<UserRequest> {
 
         const getUserRequest: UserRequest = await this.getUserByEmailAsync(email);
 
@@ -132,7 +122,7 @@ export default class UserService implements IRoleService<User> {
     }
 
 
-    async checkExistenceAsync(email: string): Promise<{ success: boolean, role?: User; }> {
+    public async checkExistenceAsync(email: string): Promise<{ success: boolean, role?: User; }> {
 
         const tempUser = await RedisClientDb0.hGetAll(`user:${email.toLowerCase()}`);
         const userExists: boolean = tempUser && Object.keys(tempUser).length > 0;

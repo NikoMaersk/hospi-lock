@@ -4,17 +4,7 @@ import { IRoleService } from "../roleService";
 
 export default class AdminService implements IRoleService<Admin> {
 
-    static instance;
-
-    constructor() {
-        if (!AdminService.instance) {
-            AdminService.instance = this;
-        }
-
-        return AdminService.instance;
-    }
-
-    async addAdminAsync(admin: Admin): Promise<AdminRequest> {
+    public async addAdminAsync(admin: Admin): Promise<AdminRequest> {
         const lowerCaseEmail = admin.email.toLowerCase();
         const request = await this.checkExistenceAsync(lowerCaseEmail);
 
@@ -31,7 +21,7 @@ export default class AdminService implements IRoleService<Admin> {
     }
 
 
-    async getAdminByEmailAsync(email: string): Promise<AdminRequest> {
+    public async getAdminByEmailAsync(email: string): Promise<AdminRequest> {
         const lowerCaseEmail: string = email.toLowerCase();
 
         const request = await this.checkExistenceAsync(lowerCaseEmail);
@@ -40,7 +30,7 @@ export default class AdminService implements IRoleService<Admin> {
     }
 
 
-    async getAllAdmins(): Promise<Record<string, Admin>> {
+    public async getAllAdmins(): Promise<Record<string, Admin>> {
         const keys = await RedisClientDb1.keys('admin:*');
         const allHashes: Record<string, Admin> = {};
 
@@ -55,7 +45,7 @@ export default class AdminService implements IRoleService<Admin> {
     }
 
 
-    async checkExistenceAsync(email: string): Promise<{ success: boolean, role?: Admin; }> {
+    public async checkExistenceAsync(email: string): Promise<{ success: boolean, role?: Admin; }> {
         const tempAdmin: Admin = await RedisClientDb1.hGetAll(`admin:${email}`);
 
         const adminExists: boolean = tempAdmin && Object.keys(tempAdmin).length > 0;
