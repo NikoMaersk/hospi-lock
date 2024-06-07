@@ -1,20 +1,26 @@
 import { RedisClientDb0 } from "./database-service";
 import { Lock, LockRequest } from "../../models/lock";
-import AuthService from "../auth-service";
+import UserService from "./user-service";
 
 export default class LockService {
 
-    static async addLockAsync(lock: Lock): Promise<LockRequest> {
+    userService: UserService;
+
+    constructor(userService: UserService) {
+        this.userService = userService;
+    }
+
+    async addLockAsync(lock: Lock): Promise<LockRequest> {
 
         if (lock.email) {
             lock.email = lock.email.toLowerCase();
-            const authResult = await AuthService.checkUserExistenceAsync(lock.email);
+            const authResult = await this.userService.checkExistenceAsync(lock.email);
 
             if (!authResult.success) {
                 return {
                     success: authResult.success,
-                    message: authResult.message,
-                    statusCode: authResult.statusCode
+                    message: 'No registered user with that email',
+                    statusCode: 400
                 };
             }
         }
@@ -33,7 +39,7 @@ export default class LockService {
     }
 
 
-    static async getAllLocksAsync(): Promise<Record<string, Lock>> {
+    async getAllLocksAsync(): Promise<Record<string, Lock>> {
         try {
             const keys = await RedisClientDb0.keys('lock:*')
             const allHashes: Record<string, Lock> = {};
@@ -61,7 +67,7 @@ export default class LockService {
     }
 
 
-    static async getLockByIdAsync(id: string): Promise<LockRequest> {
+    async getLockByIdAsync(id: string): Promise<LockRequest> {
         const lock = await RedisClientDb0.hGetAll(`lock:${id}`);
 
         if (Object.keys(lock).length === 0) {
@@ -72,19 +78,19 @@ export default class LockService {
     }
 
 
-    static async getLockByEmail(email: string): Promise<LockRequest> {
+    async getLockByEmail(email: string): Promise<LockRequest> {
         const lowerCaseEmail = email.toLowerCase();
-        const authResult = await AuthService.checkUserExistenceAsync(lowerCaseEmail);
+        const authResult = await this.userService.checkExistenceAsync(lowerCaseEmail);
 
         if (!authResult.success) {
             return {
                 success: false,
-                message: authResult.message,
-                statusCode: authResult.statusCode
+                message: 'No registered user with that email',
+                statusCode: 400
             };
         }
 
-        const user = authResult.user;
+        const user = authResult.role;
 
         const lock = await RedisClientDb0.hGetAll(`lock:${user.lockId}`);
 
@@ -96,7 +102,7 @@ export default class LockService {
     }
 
 
-    static async getLockStatusAsync(id: string): Promise<{ success: boolean, message: string, statusCode: number, lockStatus?: boolean }> {
+    async getLockStatusAsync(id: string): Promise<{ success: boolean, message: string, statusCode: number, lockStatus?: boolean }> {
         const lockRequest: LockRequest = await this.getLockByIdAsync(id);
 
         if (!lockRequest.success) {
@@ -109,7 +115,7 @@ export default class LockService {
     }
 
 
-    static async getLockIPAsync(email: string): Promise<string> {
+    async getLockIPAsync(email: string): Promise<string> {
         const lockRequest: LockRequest = await this.getLockByEmail(email);
         let ip: string = "";
 
@@ -121,14 +127,14 @@ export default class LockService {
     }
 
 
-    static async addLockForUserAsync(email: string, id: string): Promise<LockRequest> {
-        const authResult = await AuthService.checkUserExistenceAsync(email);
+    async addLockForUserAsync(email: string, id: string): Promise<LockRequest> {
+        const authResult = await this.userService.checkExistenceAsync(email);
 
         if (!authResult.success) {
             return {
                 success: false,
-                message: authResult.message,
-                statusCode: authResult.statusCode
+                message: 'No registered user with that email',
+                statusCode: 400
             }
         }
 
@@ -142,7 +148,7 @@ export default class LockService {
             return { success: false, message: 'User already registered for that lock', statusCode: 409 }
         }
 
-        if (authResult.user.email && authResult.user.email.trim() === "") {
+        if (authResult.role.email && authResult.role.email.trim() === "") {
             return { success: false, message: 'User already have a registered lock', statusCode: 409 };
         }
 
@@ -158,7 +164,7 @@ export default class LockService {
     }
 
 
-    static async setStatusAsync(lock: Lock, status: boolean): Promise<{ success: boolean, message: string, statusCode: number }> {
+    async setStatusAsync(lock: Lock, status: boolean): Promise<{ success: boolean, message: string, statusCode: number }> {
         try {
 
             const newStatus = status ? 1 : 0;

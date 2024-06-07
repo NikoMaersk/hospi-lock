@@ -1,7 +1,8 @@
-import { User, UserRequest } from "../models/user";
-import { Admin, AdminRequest } from "../models/admin";
-import { RedisClientDb0, RedisClientDb1 } from "./database/database-service";
+import { User } from "../models/user";
+import { Admin } from "../models/admin";
 import { NextFunction, Request, Response } from "express";
+import { IRoleService } from "./roleService";
+import { BaseRole } from "../models/baseRole";
 
 const jwt = require('jsonwebtoken');
 
@@ -11,99 +12,44 @@ export enum Role {
     ADMIN = 'admin',
 }
 
+
 export default class AuthService {
-    static async authenticationAsync(email: string, password: string, role: Role): Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
 
-        try {
-            const verifyResult = await AuthService.checkExistenceAsync(email, role);
+    private roleServices: Map<Role, IRoleService<BaseRole>>;
 
-            if (!verifyResult.success) {
-                return { success: verifyResult.success, message: verifyResult.message, statusCode: verifyResult.statusCode };
-            }
-
-            const tempRole: User | Admin = verifyResult.user;
-
-            if (password !== tempRole.password) {
-                return { success: false, message: 'Invalid password', statusCode: 401 };
-            }
-
-            return { success: true, message: 'OK', statusCode: 200, role: tempRole };
-
-        } catch (error) {
-            console.error('Internal server error: ', error);
-            return { success: false, message: 'Internal server error', statusCode: 500 };
-        }
+    constructor(userService: IRoleService<User>, adminService: IRoleService<Admin>) {
+        this.roleServices = new Map<Role, IRoleService<BaseRole>>();
+        this.roleServices.set(Role.USER, userService);
+        this.roleServices.set(Role.ADMIN, adminService);
     }
 
 
-    static async checkExistenceAsync(email: string, role: Role): Promise<UserRequest | AdminRequest> {
+    async authenticationAsync<T extends BaseRole>(email: string, password: string, role: Role):
+        Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
 
-        if (!email) {
-            return { success: false, message: 'Missing required field', statusCode: 400 };
+        const roleService = this.roleServices.get(role) as IRoleService<T>;
+
+        if (!roleService) {
+            return { success: false, message: 'Invalid role', statusCode: 400 };
         }
 
-        if (!this.emailValidator(email)) {
-            return { success: false, message: 'Not a valid email', statusCode: 400 };
+        const verifyResult = await roleService.checkExistenceAsync(email);
+
+        if (!verifyResult.success || !verifyResult.role) {
+            return { success: false, message: `No registered ${role} with that email`, statusCode: 400 };
         }
 
-        let result: UserRequest | AdminRequest;
+        const tempRole = verifyResult.role;
 
-        switch (role) {
-            case Role.USER:
-                result = await this.checkUserExistenceAsync(email);
-                break;
-            case Role.ADMIN:
-                result = await this.checkAdminExistenceAsync(email);
-                break;
-            default:
-                result = { success: false, message: 'Missing role', statusCode: 500 };
+        if (!tempRole.password || password !== tempRole.password) {
+            return { success: false, message: 'Invalid password', statusCode: 401 };
         }
 
-        return result;
+        return { success: true, message: 'OK', statusCode: 200, role: tempRole };
     }
 
 
-    static async checkUserExistenceAsync(email: string): Promise<UserRequest> {
-
-        const tempUser = await RedisClientDb0.hGetAll(`user:${email.toLowerCase()}`);
-        const userExists: boolean = tempUser && Object.keys(tempUser).length > 0;
-
-        if (!userExists) {
-            return { success: false, message: 'No registered user with that email', statusCode: 400 };
-        }
-
-        const user: User = {
-            email: tempUser.email,
-            password: tempUser.password,
-            firstName: tempUser.first_name,
-            lastName: tempUser.last_name,
-            date: tempUser.reg_date,
-            lockId: tempUser.lock_id
-        }
-
-        return { success: true, message: 'OK', statusCode: 200, user: user };
-    }
-
-
-    static async checkAdminExistenceAsync(email: string): Promise<AdminRequest> {
-        const tempAdmin = await RedisClientDb1.hGetAll(`admin:${email}`);
-
-        const adminExists: boolean = tempAdmin && Object.keys(tempAdmin).length > 0;
-
-        if (!adminExists) {
-            return { success: false, message: 'No registered admin with that email', statusCode: 400 };
-        }
-
-        const admin: Admin = {
-            email: tempAdmin.email,
-            password: tempAdmin.password,
-        }
-
-        return { success: true, message: 'OK', statusCode: 200, user: admin };
-    }
-
-
-    static verifyToken = (req: Request, res: Response, next: NextFunction) => {
+    verifyToken = (req: Request, res: Response, next: NextFunction) => {
         const token = req.cookies.access_token;
         if (!token) {
             console.log('No token provided in cookies');
@@ -123,7 +69,7 @@ export default class AuthService {
     };
 
 
-    static checkRole = (role: Role) => {
+    checkRole = (role: Role) => {
         return (req, res, next) => {
             if (req.role !== role) {
                 console.log(`Access denied: role ${req.role} does not match ${role}`);
@@ -134,7 +80,7 @@ export default class AuthService {
     };
 
 
-    static generateToken = (email: string, role: Role) => {
+    generateToken = (email: string, role: Role) => {
         const payload = {
             email: email,
             role: role,

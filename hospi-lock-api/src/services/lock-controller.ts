@@ -9,9 +9,14 @@ export enum Locking {
 export default class LockController {
 
     private static PORT: string = process.env.PORT;
+    lockService;
 
-    static async lockingAsync(email: string, lock: Locking): Promise<{ success: boolean, message: string | unknown }> {
-        const lockRequest: LockRequest = await LockService.getLockByEmail(email);
+    constructor(lockService: LockService) {
+        this.lockService = lockService;
+    }
+
+    async lockingAsync(email: string, lock: Locking): Promise<{ success: boolean, message: string | unknown }> {
+        const lockRequest: LockRequest = await this.lockService.getLockByEmail(email);
         const tempLock: Lock = lockRequest.lock;
 
         if (!tempLock) {
@@ -37,17 +42,17 @@ export default class LockController {
                 return;
         }
 
-        const postRequest = await LockController.requestAsync(IP, endpoint);
+        const postRequest = await this.requestAsync(IP, endpoint);
 
         if (postRequest.success) {
-            await LockService.setStatusAsync(lockRequest.lock, !lockRequest.lock.status);
+            await this.lockService.setStatusAsync(lockRequest.lock, !lockRequest.lock.status);
         }
 
         return postRequest;
     }
 
 
-    private static async requestAsync(IP: string, endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
+    private async requestAsync(IP: string, endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
 
         try {
             const response = await fetch(`http://${IP}:${LockController.PORT}/${endpoint}`, {

@@ -1,12 +1,22 @@
 import { RedisClientDb1 } from "./database-service";
 import { Admin, AdminRequest } from "../../models/admin";
-import AuthService, { Role } from "../auth-service";
+import { IRoleService } from "../roleService";
 
-export default class AdminService {
+export default class AdminService implements IRoleService<Admin> {
 
-    static async addAdminAsync(admin: Admin): Promise<AdminRequest> {
+    static instance;
+
+    constructor() {
+        if (!AdminService.instance) {
+            AdminService.instance = this;
+        }
+
+        return AdminService.instance;
+    }
+
+    async addAdminAsync(admin: Admin): Promise<AdminRequest> {
         const lowerCaseEmail = admin.email.toLowerCase();
-        const request: AdminRequest = await AuthService.checkAdminExistenceAsync(lowerCaseEmail);
+        const request = await this.checkExistenceAsync(lowerCaseEmail);
 
         if (request.success) {
             return { success: false, message: 'Admin already registered', statusCode: 409 };
@@ -21,16 +31,16 @@ export default class AdminService {
     }
 
 
-    static async getAdminByEmailAsync(email: string): Promise<AdminRequest> {
+    async getAdminByEmailAsync(email: string): Promise<AdminRequest> {
         const lowerCaseEmail: string = email.toLowerCase();
 
-        const request: AdminRequest = await AuthService.checkExistenceAsync(lowerCaseEmail, Role.ADMIN);
+        const request = await this.checkExistenceAsync(lowerCaseEmail);
 
         return request;
     }
 
 
-    static async getAllAdmins(): Promise<Record<string, Admin>> {
+    async getAllAdmins(): Promise<Record<string, Admin>> {
         const keys = await RedisClientDb1.keys('admin:*');
         const allHashes: Record<string, Admin> = {};
 
@@ -42,5 +52,23 @@ export default class AdminService {
         await Promise.all(promises);
 
         return allHashes;
+    }
+
+
+    async checkExistenceAsync(email: string): Promise<{ success: boolean, role?: Admin; }> {
+        const tempAdmin: Admin = await RedisClientDb1.hGetAll(`admin:${email}`);
+
+        const adminExists: boolean = tempAdmin && Object.keys(tempAdmin).length > 0;
+
+        if (!adminExists) {
+            return { success: false };
+        }
+
+        const admin: Admin = {
+            email: tempAdmin.email,
+            password: tempAdmin.password,
+        }
+
+        return { success: true, role: admin };
     }
 }

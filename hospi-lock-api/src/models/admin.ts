@@ -1,13 +1,13 @@
+import { BaseRole } from "./baseRole";
 
-export interface Admin {
-    email: string,
-    password?: string,
+export interface Admin extends BaseRole {
+    iconUrl?: string,
 }
 
 
 export interface AdminRequest {
     success: boolean,
-    message: string,
+    message?: string,
     statusCode?: number,
     user?: Admin
 }

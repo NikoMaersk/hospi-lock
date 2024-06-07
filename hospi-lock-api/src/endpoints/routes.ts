@@ -28,6 +28,14 @@ routes.use(express.static("public"));
 routes.use(bodyParser.urlencoded({ extended: false }));
 routes.use(bodyParser.json());
 
+const userService = new UserService();
+const adminService = new AdminService();
+
+const lockService = new LockService(userService);
+const lockController = new LockController(lockService);
+
+const authService = new AuthService(userService, adminService);
+
 
 // Create new user
 routes.post('/users', async (req, res) => {
@@ -39,7 +47,7 @@ routes.post('/users', async (req, res) => {
   }
 
   try {
-    const addRequest = await UserService.addUserAsync(user);
+    const addRequest = await userService.addUserAsync(user);
 
     if (!addRequest.success) {
       return res.status(addRequest.statusCode).send(addRequest.message);
@@ -57,10 +65,10 @@ routes.post('/users', async (req, res) => {
 
 
 // Get specific user with email as parameter
-routes.get('/users/:email', AuthService.verifyToken, async (req, res) => {
+routes.get('/users/:email', authService.verifyToken, async (req, res) => {
   const { email } = req.params;
   try {
-    const dataRequest = await UserService.getUserByEmailAsync(email);
+    const dataRequest = await userService.getUserByEmailAsync(email);
     console.log(`GET user request: ${dataRequest.success}`)
 
     if (!dataRequest.success) {
@@ -77,9 +85,9 @@ routes.get('/users/:email', AuthService.verifyToken, async (req, res) => {
 
 
 // Get all users
-routes.get('/users', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/users', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   try {
-    const userRecords = await UserService.getAllUsersAsync();
+    const userRecords = await userService.getAllUsersAsync();
 
     return res.status(200).json(userRecords);
   } catch (error) {
@@ -96,7 +104,7 @@ routes.patch('/users/:email/password', async (req, res) => {
   const { password } = req.body;
 
   try {
-    const patchRequest = await UserService.patchPasswordAsync(email, password);
+    const patchRequest = await userService.patchPasswordAsync(email, password);
 
     if (!patchRequest.success) {
       return res.status(patchRequest.statusCode).send(patchRequest.message);
@@ -118,7 +126,7 @@ routes.post('/signin', async (req, res) => {
   try {
     const ipAddress: string = req.headers['x-forwarded-for']?.[0] || req.socket.remoteAddress || "unknown";
 
-    const authResult = await AuthService.authenticationAsync(email, password, Role.USER);
+    const authResult = await authService.authenticationAsync(email, password, Role.USER);
 
     const logSuccess = await LogService.logSigninMessageAsync(email, authResult.success, ipAddress);
 
@@ -126,7 +134,7 @@ routes.post('/signin', async (req, res) => {
       return res.status(authResult.statusCode).send(authResult.message);
     }
 
-    const token = AuthService.generateToken(email, Role.USER);
+    const token = authService.generateToken(email, Role.USER);
 
     console.log(`log success: ${logSuccess.success}, message: ${logSuccess.message}`);
 
@@ -142,7 +150,7 @@ routes.post('/signin', async (req, res) => {
 
 
 // Register a user under a lock
-routes.post('/locks/user', AuthService.verifyToken, async (req, res) => {
+routes.post('/locks/user', authService.verifyToken, async (req, res) => {
   let { email, id } = req.body;
 
   if (!email || !id) {
@@ -151,7 +159,7 @@ routes.post('/locks/user', AuthService.verifyToken, async (req, res) => {
 
   try {
 
-    const lockRequest: LockRequest = await LockService.addLockForUserAsync(email, id);
+    const lockRequest: LockRequest = await lockService.addLockForUserAsync(email, id);
 
     if (!lockRequest.success) {
       return res.status(lockRequest.statusCode).send(lockRequest.message);
@@ -166,11 +174,11 @@ routes.post('/locks/user', AuthService.verifyToken, async (req, res) => {
 
 
 // Get a specific lock with a registered email
-routes.get('/locks/email/:email', AuthService.verifyToken, async (req, res) => {
+routes.get('/locks/email/:email', authService.verifyToken, async (req, res) => {
   let { email } = req.params;
 
   try {
-    const lockRequest: LockRequest = await LockService.getLockByEmail(email);
+    const lockRequest: LockRequest = await lockService.getLockByEmail(email);
 
     if (!lockRequest.success) {
       return res.status(lockRequest.statusCode).send(lockRequest.message);
@@ -185,11 +193,11 @@ routes.get('/locks/email/:email', AuthService.verifyToken, async (req, res) => {
 
 
 // Get a specific lock with a id
-routes.get('/locks/id/:id', AuthService.verifyToken, async (req, res) => {
+routes.get('/locks/id/:id', authService.verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const lockRequest: LockRequest = await LockService.getLockByIdAsync(id);
+    const lockRequest: LockRequest = await lockService.getLockByIdAsync(id);
 
     if (!lockRequest.success) {
       return res.status(lockRequest.statusCode).send(lockRequest.message);
@@ -204,11 +212,11 @@ routes.get('/locks/id/:id', AuthService.verifyToken, async (req, res) => {
 
 
 // Returns the status of a specific lock
-routes.get('/locks/status/:id', AuthService.verifyToken, async (req, res) => {
+routes.get('/locks/status/:id', authService.verifyToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const statusRequest = await LockService.getLockStatusAsync(id);
+    const statusRequest = await lockService.getLockStatusAsync(id);
 
     if (!statusRequest.success) {
       return res.status(statusRequest.statusCode).send(statusRequest.message);
@@ -223,7 +231,7 @@ routes.get('/locks/status/:id', AuthService.verifyToken, async (req, res) => {
 
 
 // Post a new lock
-routes.post('/locks', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.post('/locks', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const lockRequest: Lock = req.body;
 
   if (!lockRequest || !lockRequest.ip) {
@@ -231,7 +239,7 @@ routes.post('/locks', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN)
   }
 
   try {
-    const addRequest: LockRequest = await LockService.addLockAsync(lockRequest);
+    const addRequest: LockRequest = await lockService.addLockAsync(lockRequest);
 
     if (!addRequest.success) {
       return res.status(addRequest.statusCode).send(addRequest.message);
@@ -246,9 +254,9 @@ routes.post('/locks', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN)
 
 
 // Get all locks
-routes.get('/locks', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/locks', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   try {
-    const lockRecords = await LockService.getAllLocksAsync();
+    const lockRecords = await lockService.getAllLocksAsync();
 
     return res.status(200).json(lockRecords);
   } catch (error) {
@@ -259,11 +267,11 @@ routes.get('/locks', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN),
 
 
 // Attempts to unlock a lock registered to a specific user
-routes.post('/locks/unlock/:email', AuthService.verifyToken, async (req, res) => {
+routes.post('/locks/unlock/:email', authService.verifyToken, async (req, res) => {
   const { email } = req.params;
 
   try {
-    const isSuccess = await LockController.lockingAsync(email, Locking.UNLOCK);
+    const isSuccess = await lockController.lockingAsync(email, Locking.UNLOCK);
 
     if (!isSuccess) {
       return res.status(400).send(isSuccess.message);
@@ -279,11 +287,11 @@ routes.post('/locks/unlock/:email', AuthService.verifyToken, async (req, res) =>
 
 
 // Attempts to lock a lock registered to a specific user
-routes.post('/locks/lock/:email', AuthService.verifyToken, async (req, res) => {
+routes.post('/locks/lock/:email', authService.verifyToken, async (req, res) => {
   const { email } = req.params;
 
   try {
-    const isSuccess = await LockController.lockingAsync(email, Locking.LOCK);
+    const isSuccess = await lockController.lockingAsync(email, Locking.LOCK);
 
     if (!isSuccess) {
       return res.status(400).send(isSuccess.message);
@@ -299,7 +307,7 @@ routes.post('/locks/lock/:email', AuthService.verifyToken, async (req, res) => {
 
 
 // Registers a new admin in the system
-routes.post('/admin', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.post('/admin', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -313,7 +321,7 @@ routes.post('/admin', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN)
       password: password
     }
 
-    const request: AdminRequest = await AdminService.addAdminAsync(tempAdmin);
+    const request: AdminRequest = await adminService.addAdminAsync(tempAdmin);
 
     if (!request.success) {
       return res.status(request.statusCode).send(request.message);
@@ -334,7 +342,7 @@ routes.post('/admin/signin', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const authResult = await AuthService.authenticationAsync(email, password, Role.ADMIN);
+    const authResult = await authService.authenticationAsync(email, password, Role.ADMIN);
 
     console.log(`Admin signin: ${authResult.success}, message: ${authResult.message}`);
 
@@ -342,7 +350,7 @@ routes.post('/admin/signin', async (req, res) => {
       return res.status(authResult.statusCode).send(authResult.message);
     }
 
-    const token = AuthService.generateToken(email, Role.ADMIN);
+    const token = authService.generateToken(email, Role.ADMIN);
 
     return res
       .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: parseInt(process.env.JWT_EXPIRATION_TIME, 10) })
@@ -356,7 +364,7 @@ routes.post('/admin/signin', async (req, res) => {
 
 
 // Clears the cookie if one is authenticated
-routes.post("/signout", AuthService.verifyToken, (req, res) => {
+routes.post("/signout", authService.verifyToken, (req, res) => {
   return res
     .clearCookie("access_token")
     .status(200)
@@ -365,9 +373,9 @@ routes.post("/signout", AuthService.verifyToken, (req, res) => {
 
 
 // Returns all registered admins
-routes.get('/admin', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/admin', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   try {
-    const adminRecords = await AdminService.getAllAdmins();
+    const adminRecords = await adminService.getAllAdmins();
 
     return res.status(200).json(adminRecords);
   } catch (error) {
@@ -379,10 +387,10 @@ routes.get('/admin', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN),
 
 
 // Returns a specific admin based on email
-routes.get('/admin/:email', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/admin/:email', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const { email } = req.params;
 
-  const request: AdminRequest = await AdminService.getAdminByEmailAsync(email);
+  const request: AdminRequest = await adminService.getAdminByEmailAsync(email);
 
   if (!request.success) {
     return res.status(request.statusCode).send(request.message);
@@ -393,7 +401,7 @@ routes.get('/admin/:email', AuthService.verifyToken, AuthService.checkRole(Role.
 
 
 // Returns either all logs related to the locks, if no offset and limit is given or a number of logs as specified by the offset and limit
-routes.get('/logs/lock', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/logs/lock', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const offset: number = parseInt(req.query.offset as string);
   const limit: number = parseInt(req.query.limit as string);
 
@@ -416,7 +424,7 @@ routes.get('/logs/lock', AuthService.verifyToken, AuthService.checkRole(Role.ADM
 
 
 // Returns either all logs related to the user signin, if no offset and limit is given or a number of logs as specified by the offset and limit
-routes.get('/logs/signin', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.get('/logs/signin', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const offset: number = parseInt(req.query.offset as string);
   const limit: number = parseInt(req.query.limit as string);
 
@@ -469,10 +477,10 @@ routes.post('/logs', async (req, res) => {
 
 
 // Validates a cookie and responds with the admin info, the cookie is generated for if succesful
-routes.post('/admin/auth', AuthService.verifyToken, AuthService.checkRole(Role.ADMIN), async (req, res) => {
+routes.post('/admin/auth', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const email = req.email;
 
-  const adminRequest: AdminRequest = await AdminService.getAdminByEmailAsync(email);
+  const adminRequest: AdminRequest = await adminService.getAdminByEmailAsync(email);
 
   if (!adminRequest.success) {
     console.log('Admin authentication denied');

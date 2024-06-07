@@ -1,8 +1,20 @@
 import { RedisClientDb0 } from "./database-service";
 import { User, UserRequest } from "../../models/user";
+import { IRoleService } from "../roleService";
 
-export default class UserService {
-    static async getUserByEmailAsync(email: string): Promise<UserRequest> {
+export default class UserService implements IRoleService<User> {
+
+    static instance;
+
+    constructor() {
+        if (!UserService.instance) {
+            UserService.instance = this;
+        }
+
+        return UserService.instance;
+    }
+
+    async getUserByEmailAsync(email: string): Promise<UserRequest> {
         const lowerCaseEmail = email.toLowerCase();
         const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
 
@@ -21,7 +33,8 @@ export default class UserService {
         return { success: true, message: "User fetched", statusCode: 200, user: user };
     }
 
-    static async getAllUsersAsync(): Promise<Record<string, User>> {
+    
+    async getAllUsersAsync(): Promise<Record<string, User>> {
         try {
             const keys = await RedisClientDb0.keys("user:*");
             const allHashes: Record<string, User> = {};
@@ -50,7 +63,7 @@ export default class UserService {
     }
 
 
-    static async getPartialUsersAsync(amount: number): Promise<Record<string, User>> {
+    async getPartialUsersAsync(amount: number): Promise<Record<string, User>> {
         const cursor = 0;
         const pattern = 'user:*';
         const countAmount = amount;
@@ -76,9 +89,9 @@ export default class UserService {
 
         return allHashes;
     }
-    
 
-    static async addUserAsync(user: User): Promise<UserRequest> {
+
+    async addUserAsync(user: User): Promise<UserRequest> {
         const lowerCaseEmail = user.email.toLowerCase();
         const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
 
@@ -103,7 +116,7 @@ export default class UserService {
     }
 
 
-    static async patchPasswordAsync(email: string, newPassword: string): Promise<UserRequest> {
+    async patchPasswordAsync(email: string, newPassword: string): Promise<UserRequest> {
 
         const getUserRequest: UserRequest = await this.getUserByEmailAsync(email);
 
@@ -116,5 +129,27 @@ export default class UserService {
         await RedisClientDb0.hSet(`user:${tempUser.email}`, 'password', newPassword);
 
         return getUserRequest;
+    }
+
+
+    async checkExistenceAsync(email: string): Promise<{ success: boolean, role?: User; }> {
+
+        const tempUser = await RedisClientDb0.hGetAll(`user:${email.toLowerCase()}`);
+        const userExists: boolean = tempUser && Object.keys(tempUser).length > 0;
+
+        if (!userExists) {
+            return { success: false };
+        }
+
+        const user: User = {
+            email: tempUser.email,
+            password: tempUser.password,
+            firstName: tempUser.first_name,
+            lastName: tempUser.last_name,
+            date: tempUser.reg_date,
+            lockId: tempUser.lock_id
+        }
+
+        return { success: true, role: user };
     }
 }
