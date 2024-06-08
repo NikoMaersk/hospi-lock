@@ -9,7 +9,7 @@ export enum Locking {
 export default class LockController {
 
     private static PORT: string = process.env.PORT;
-    private lockService;
+    private lockService: LockService;
 
     public constructor(lockService: LockService) {
         this.lockService = lockService;

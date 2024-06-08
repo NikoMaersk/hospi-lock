@@ -349,7 +349,7 @@ routes.post('/admin/signin', async (req, res) => {
     console.log(`Admin signin: ${authResult.success}, message: ${authResult.message}`);
 
     if (!authResult.success) {
-      return res.status(400).send(authResult.message);
+      return res.status(authResult.statusCode).send(authResult.message);
     }
 
     const token = authService.generateToken(email, Role.ADMIN);

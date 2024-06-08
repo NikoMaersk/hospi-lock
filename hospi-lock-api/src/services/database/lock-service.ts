@@ -4,7 +4,7 @@ import UserService from "./user-service";
 
 export default class LockService {
 
-    userService: UserService;
+    private userService: UserService;
 
     public constructor(userService: UserService) {
         this.userService = userService;
