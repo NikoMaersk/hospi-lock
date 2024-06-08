@@ -12,9 +12,12 @@ export default class AdminService implements IRoleService<Admin> {
             return { success: false, message: 'Admin already registered', statusCode: 409 };
         }
 
+        console.log(`email: ${admin.email}, password: ${admin.password}, url: ${admin.iconUrl}`)
+
         await RedisClientDb1.hSet(`admin:${admin.email}`, {
             email: lowerCaseEmail,
-            password: admin.password
+            password: admin.password,
+            iconUrl: admin.iconUrl || "",
         });
 
         return { success: true, message: 'Admin created', statusCode: 201 }
@@ -22,9 +25,8 @@ export default class AdminService implements IRoleService<Admin> {
 
 
     public async getAdminByEmailAsync(email: string): Promise<AdminRequest> {
-        const lowerCaseEmail: string = email.toLowerCase();
 
-        const request = await this.checkExistenceAsync(lowerCaseEmail);
+        const request = await this.checkExistenceAsync(email);
 
         if (!request.success) {
             return { success: request.success, message: 'No registered admin with that email', statusCode: 400 }
@@ -50,7 +52,7 @@ export default class AdminService implements IRoleService<Admin> {
 
 
     public async checkExistenceAsync(email: string): Promise<{ success: boolean, role?: Admin; }> {
-        const tempAdmin: Admin = await RedisClientDb1.hGetAll(`admin:${email}`);
+        const tempAdmin = await RedisClientDb1.hGetAll(`admin:${email.toLowerCase()}`);
 
         const adminExists: boolean = tempAdmin && Object.keys(tempAdmin).length > 0;
 
@@ -61,6 +63,7 @@ export default class AdminService implements IRoleService<Admin> {
         const admin: Admin = {
             email: tempAdmin.email,
             password: tempAdmin.password,
+            iconUrl: tempAdmin.iconUrl
         }
 
         return { success: true, role: admin };

@@ -14,10 +14,10 @@ export default class UserService implements IRoleService<User> {
 
         const user: User = {
             email: lowerCaseEmail,
-            firstName: tempUser.first_name,
-            lastName: tempUser.last_name,
-            date: tempUser.reg_date,
-            lockId: tempUser.lock_id || ""
+            firstName: tempUser.firstName,
+            lastName: tempUser.lastName,
+            date: tempUser.regDate,
+            lockId: tempUser.lockId || ""
         }
 
         return { success: true, message: "User fetched", statusCode: 200, user: user };
@@ -34,10 +34,10 @@ export default class UserService implements IRoleService<User> {
 
                 const tempUser: User = {
                     email: hashValues.email,
-                    firstName: hashValues.first_name,
-                    lastName: hashValues.last_name,
-                    date: hashValues.reg_date,
-                    lockId: hashValues.lock_id
+                    firstName: hashValues.firstName,
+                    lastName: hashValues.lastName,
+                    date: hashValues.regDate,
+                    lockId: hashValues.lockId
                 };
 
                 allHashes[key] = tempUser;
@@ -66,10 +66,10 @@ export default class UserService implements IRoleService<User> {
 
             const tempUser: User = {
                 email: hashValues.email,
-                firstName: hashValues.first_name,
-                lastName: hashValues.last_name,
+                firstName: hashValues.firstName,
+                lastName: hashValues.lastName,
                 date: hashValues.date,
-                lockId: hashValues.lock_id
+                lockId: hashValues.lockId
             }
 
             allHashes[key] = tempUser;
@@ -96,10 +96,10 @@ export default class UserService implements IRoleService<User> {
         await RedisClientDb0.hSet(`user:${lowerCaseEmail}`, {
             email: lowerCaseEmail,
             password: user.password,
-            first_name: user.firstName,
-            last_name: user.lastName,
-            reg_date: now.toISOString(),
-            lock_id: user.lockId || "",
+            firstName: user.firstName,
+            lastName: user.lastName,
+            regDate: now.toISOString(),
+            lockId: user.lockId || "",
         });
 
         return { success: true, message: 'User created', statusCode: 201 };
@@ -134,10 +134,10 @@ export default class UserService implements IRoleService<User> {
         const user: User = {
             email: tempUser.email,
             password: tempUser.password,
-            firstName: tempUser.first_name,
-            lastName: tempUser.last_name,
-            date: tempUser.reg_date,
-            lockId: tempUser.lock_id
+            firstName: tempUser.firstName,
+            lastName: tempUser.lastName,
+            date: tempUser.regDate,
+            lockId: tempUser.lockId
         }
 
         return { success: true, role: user };

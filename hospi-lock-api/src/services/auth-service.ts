@@ -27,22 +27,33 @@ export default class AuthService {
     public async authenticationAsync<T extends BaseRole>(email: string, password: string, role: Role):
         Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
 
+        let response = { success: false, message: '', statusCode: 400 };
+
+        if (!AuthService.emailValidator(email)) {
+            response.message = 'Not a valid email';
+            return response;
+        }
+
         const roleService = this.roleServices.get(role) as IRoleService<T>;
 
         if (!roleService) {
-            return { success: false, message: 'Invalid role', statusCode: 400 };
+            response.message = 'Invalid role';
+            return response;
         }
 
         const verifyResult = await roleService.checkExistenceAsync(email);
 
         if (!verifyResult.success || !verifyResult.role) {
-            return { success: false, message: `No registered ${role} with that email`, statusCode: 400 };
+            response.message = `No registered ${role} with that email`;
+            return response;
         }
 
         const tempRole = verifyResult.role;
 
         if (!tempRole.password || password !== tempRole.password) {
-            return { success: false, message: 'Invalid password', statusCode: 401 };
+            response.message = 'Invalid password';
+            response.statusCode = 401;
+            return response;
         }
 
         return { success: true, message: 'OK', statusCode: 200, role: tempRole };
