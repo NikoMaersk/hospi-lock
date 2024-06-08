@@ -15,6 +15,7 @@ export default function PageHeader() {
     const [showFullWidthSearch, setShowFullWidthSearch] = useState(false);
     const [inputFocused, setInputFocused] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [iconUrl, setIconUrl] = useState('');
     const { isLoggedIn, setIsLoggedIn } = useAuth();
 
     const toggleModal = () => {
@@ -24,7 +25,7 @@ export default function PageHeader() {
 
     const handleLogin = async (email: string, password: string) => {
         try {
-            const SERVER_IP = '10.176.69.180';
+            const SERVER_IP = process.env.SERVER_IP || 'localhost';
             const PORT = process.env.SERVER_PORT || '4000';
 
             const response = await fetch(`http://${SERVER_IP}:${PORT}/admin/signin`, {
@@ -34,16 +35,17 @@ export default function PageHeader() {
                 },
                 body: JSON.stringify({
                     email: email,
-                    password: password
+                    password: password,
                 }),
                 credentials: 'include'
             });
 
-            console.log(response.json());
+            const { iconUrl } = await response.json();
 
             if (response.ok) {
                 console.log('Login successful');
                 setIsLoggedIn(true);
+                setIconUrl(iconUrl);
             } else {
                 console.error('Login failed');
             }
@@ -62,8 +64,10 @@ export default function PageHeader() {
 
             if (response.ok) {
                 const data = await response.json();
+                const { iconUrl } = data;
                 console.log('User authenticated', data);
                 setIsLoggedIn(true);
+                setIconUrl(iconUrl);
             } else {
                 console.error('User not authenticated');
             }
@@ -122,7 +126,7 @@ export default function PageHeader() {
                 {isLoggedIn &&
                     <Button variant="ghost" className={`md:hidden ${showFullWidthSearch ? "hidden" : ""}`} onClick={() => setShowFullWidthSearch(true)}>
                         <Search />
-                    </Button> }
+                    </Button>}
                 <Button variant="ghost" className={`${showFullWidthSearch ? "hidden" : ""}`} >
                     <HelpCircle />
                 </Button>
@@ -133,8 +137,8 @@ export default function PageHeader() {
                     <ThemeSwitch />
                 </div>
                 {isLoggedIn ?
-                    (<a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" className={twMerge(buttonStyles({ variant: "ghost" }), `p-0.5 ml-2`)}>
-                        <img src="https://randomuser.me/api/portraits/med/women/10.jpg"
+                    (<a href="" className={twMerge(buttonStyles({ variant: "ghost" }), `p-0.5 ml-2`)}>
+                        <img src={iconUrl}
                             className="rounded-full size-full" />
                     </a>
                     ) : (

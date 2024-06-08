@@ -341,10 +341,10 @@ routes.post('/admin', authService.verifyToken, authService.checkRole(Role.ADMIN)
 
 // Authenticates admin sign in and returns a cookie if successful
 routes.post('/admin/signin', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password: userPassword } = req.body;
 
   try {
-    const authResult = await authService.authenticationAsync(email, password, Role.ADMIN);
+    const authResult = await authService.authenticationAsync(email, userPassword, Role.ADMIN);
 
     console.log(`Admin signin: ${authResult.success}, message: ${authResult.message}`);
 
@@ -353,11 +353,13 @@ routes.post('/admin/signin', async (req, res) => {
     }
 
     const token = authService.generateToken(email, Role.ADMIN);
+    const admin: Admin = authResult.role;
+    const { password, ...adminWithoutPassword } = admin;
 
     return res
       .cookie('access_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', maxAge: parseInt(process.env.JWT_EXPIRATION_TIME, 10) })
       .status(200)
-      .send({ message: authResult.message });
+      .json(adminWithoutPassword);
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
