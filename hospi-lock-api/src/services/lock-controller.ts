@@ -21,12 +21,12 @@ export default class LockController {
 
         console.log(`Lock id: ${tempLock.id}, lock IP: ${tempLock.ip}`)
 
-        if (!tempLock || tempLock.id ) {
+        if (!tempLock || tempLock.id === undefined ) {
             return { success: false, message: 'Could not get associated lock' }
         }
 
         const IP: string = tempLock.ip;
-
+        
         if (!IP || IP.trim() === "") {
             return { success: false, message: "Could not get ip" }
         }
@@ -44,6 +44,8 @@ export default class LockController {
                 return;
         }
 
+        console.log(`Sending ${endpoint} request`);
+
         const postRequest = await this.requestAsync(IP, endpoint);
 
         if (postRequest.success) {
@@ -55,9 +57,8 @@ export default class LockController {
 
 
     private async requestAsync(IP: string, endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
-
+        console.log(`Attempting to ${endpoint}, for ip: ${IP}`)
         try {
-            console.log(`Attempting to ${endpoint}, for ip: ${IP}`)
             const response = await fetch(`http://${IP}:${LockController.PORT}/${endpoint}`, {
                 method: 'POST',
                 headers: new Headers({
