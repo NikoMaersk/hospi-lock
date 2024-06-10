@@ -157,7 +157,7 @@ export default class LockService {
         });
 
         await RedisClientDb0.hSet(`user:${email}`, {
-            lock_id: id,
+            lockId: id,
         });
 
         return { success: true, message: 'User registeret for the specified lock', statusCode: 201 };

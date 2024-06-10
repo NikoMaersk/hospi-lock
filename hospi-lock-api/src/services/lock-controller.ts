@@ -19,7 +19,9 @@ export default class LockController {
         const lockRequest: LockRequest = await this.lockService.getLockByEmail(email);
         const tempLock: Lock = lockRequest.lock;
 
-        if (!tempLock) {
+        console.log(`Lock id: ${tempLock.id}, lock IP: ${tempLock.ip}`)
+
+        if (!tempLock || tempLock.id ) {
             return { success: false, message: 'Could not get associated lock' }
         }
 
@@ -55,6 +57,7 @@ export default class LockController {
     private async requestAsync(IP: string, endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
 
         try {
+            console.log(`Attempting to ${endpoint}, for ip: ${IP}`)
             const response = await fetch(`http://${IP}:${LockController.PORT}/${endpoint}`, {
                 method: 'POST',
                 headers: new Headers({
