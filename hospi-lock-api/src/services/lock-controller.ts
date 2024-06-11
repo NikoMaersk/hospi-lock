@@ -97,16 +97,15 @@ export default class LockController {
     }
 
 
-    private async requestAsync(IP: string, endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
-        console.log(`Attempting to ${endpoint}, for ip: ${IP}`)
+    private async requestAsync(ip: string, endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
+        console.log(`Attempting to ${endpoint}, for ip: ${ip}`)
         try {
-            const response = await fetch(`http://${IP}:${LockController.PORT}/${endpoint}`, {
+            const response = await fetch(`http://${ip}:${LockController.PORT}/${endpoint}`, {
                 method: 'POST',
                 headers: new Headers({
                     'Content-Type': 'application/json'
                 })
             });
-
 
             if (!response.ok) {
                 throw new Error('Network response was not ok');

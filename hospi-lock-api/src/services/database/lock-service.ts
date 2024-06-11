@@ -26,21 +26,24 @@ export default class LockService {
      */
 
     public async addLockAsync(lock: Lock): Promise<LockRequest> {
-
-        if (lock.email) {
-            lock.email = lock.email.toLowerCase();
-            const authResult = await this.userService.checkExistenceAsync(lock.email);
-
-            if (!authResult.success) {
-                return {
-                    success: authResult.success,
-                    message: 'No registered user with that email',
-                    statusCode: 400
-                };
-            }
-        }
-
         try {
+
+            if (lock.email) {
+                lock.email = lock.email.toLowerCase();
+
+                
+
+                const authResult = await this.userService.checkExistenceAsync(lock.email);
+
+                if (!authResult.success) {
+                    return {
+                        success: authResult.success,
+                        message: 'No registered user with that email',
+                        statusCode: 400
+                    };
+                }
+            }
+
             const newId = await RedisClientDb0.incr('lock_id_counter');
             lock.id = newId.toString();
             lock.status = 0;
@@ -223,8 +226,7 @@ export default class LockService {
 
     public async setStatusAsync(lock: Lock, status: boolean): Promise<{ success: boolean, message: string, statusCode: number }> {
         try {
-
-            const newStatus = status ? 1 : 0;
+            const newStatus = status ? 0 : 1;
 
             lock.status = newStatus;
 
