@@ -516,8 +516,36 @@ routes.post('/admin/unlock/:id', authService.verifyToken, authService.checkRole(
     return res.status(400).send('Missing required parameter');
   }
 
+  try {
+    const lockingResponse = await lockController.lockingByIdAsync(id, Locking.UNLOCK);
+
+    if (!lockingResponse.success) {
+      return res.status(500).send(lockingResponse.message);
+    }
+
+    return res.status(200).send('OK');
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+});
 
 
+routes.post('/admin/lock/:id', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const lockingResponse = await lockController.lockingByIdAsync(id, Locking.LOCK);
+
+    if (!lockingResponse.success) {
+      return res.status(500).send(lockingResponse.message);
+    }
+
+    return res.status(200).send('OK');
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
 });
 
 

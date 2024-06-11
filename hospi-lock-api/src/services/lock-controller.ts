@@ -37,9 +37,9 @@ export default class LockController {
             return { success: false, message: 'Could not get associated lock' }
         }
 
-        const IP: string = tempLock.ip;
+        const ip: string = tempLock.ip;
 
-        if (!IP || IP.trim() === "") {
+        if (!ip || ip.trim() === "") {
             return { success: false, message: "Could not get ip" }
         }
 
@@ -52,13 +52,11 @@ export default class LockController {
             case Locking.UNLOCK:
                 endpoint = 'unlock';
                 break;
-            default:
-                return;
         }
 
         console.log(`Sending ${endpoint} request`);
 
-        const postRequest = await this.requestAsync(IP, endpoint);
+        const postRequest = await this.requestAsync(ip, endpoint);
 
         if (postRequest.success) {
             await this.lockService.setStatusAsync(lockRequest.lock, !lockRequest.lock.status);
@@ -67,18 +65,36 @@ export default class LockController {
         return postRequest;
     }
 
-    
-
-    // public async lockingByIdAsync(id: string, lock: Locking): Promise<{ success: boolean, message: string }> {
-    //     const lockRequest: LockRequest = await this.lockService.getLockByIdAsync(id);
-
-    //     if (!lockRequest.success) {
-    //         return {success: false, message: lockRequest.message};
-    //     }
 
 
+    public async lockingByIdAsync(id: string, lock: Locking): Promise<{ success: boolean, message: string | unknown }> {
+        const lockRequest: LockRequest = await this.lockService.getLockByIdAsync(id);
 
-    // }
+        if (!lockRequest.success) {
+            return { success: false, message: lockRequest.message };
+        }
+
+        const ip: string = lockRequest.lock?.ip;
+        let endpoint: string = "";
+
+        switch (lock) {
+            case Locking.UNLOCK:
+                endpoint = 'unlock';
+                break;
+            case Locking.LOCK:
+                endpoint = 'lock';
+                break;
+        }
+
+        const postRequest = await this.requestAsync(ip, endpoint);
+
+        if (postRequest.success) {
+            await this.lockService.setStatusAsync(lockRequest.lock, !lockRequest.lock.status);
+        }
+
+        return postRequest;
+
+    }
 
 
     private async requestAsync(IP: string, endpoint: string): Promise<{ success: boolean, message: string | unknown }> {
