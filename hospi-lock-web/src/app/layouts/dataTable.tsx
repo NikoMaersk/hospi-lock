@@ -35,14 +35,17 @@ async function getUsers(): Promise<User[]> {
 
 
 async function getLocks(): Promise<Lock[]> {
-    const res = await fetch(`http://${SERVER_IP}:${PORT}/logs/lock`, {
+    const res = await fetch(`http://${SERVER_IP}:${PORT}/locks`, {
         method: 'GET',
         credentials: 'include',
     });
     if (!res.ok) {
         throw new Error('Failed to fetch locks');
     }
-    return res.json();
+    const data: Record<string, Lock> = await res.json();
+    const locks: Lock[] = Object.values(data);
+
+    return locks;
 }
 
 
@@ -67,6 +70,7 @@ interface Lock {
     id: number;
     ip: string;
     status: number;
+    email: string;
 }
 
 
@@ -236,6 +240,7 @@ export function LockTableItem() {
                         <th>Lock ID</th>
                         <th>IP</th>
                         <th>Lock status</th>
+                        <th>Registered user</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -245,6 +250,7 @@ export function LockTableItem() {
                                 <td>{lock.id}</td>
                                 <td>{lock.ip}</td>
                                 <td>{lock.status}</td>
+                                <td>{lock.email}</td>
                             </tr>
                         );
                     })}

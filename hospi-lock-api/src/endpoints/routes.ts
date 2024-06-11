@@ -273,7 +273,7 @@ routes.post('/locks/unlock/:email', authService.verifyToken, async (req, res) =>
   const { email } = req.params;
 
   try {
-    const isSuccess = await lockController.lockingAsync(email, Locking.UNLOCK);
+    const isSuccess = await lockController.lockingByEmailAsync(email, Locking.UNLOCK);
 
     if (!isSuccess) {
       return res.status(400).send(isSuccess.message);
@@ -293,7 +293,7 @@ routes.post('/locks/lock/:email', authService.verifyToken, async (req, res) => {
   const { email } = req.params;
 
   try {
-    const isSuccess = await lockController.lockingAsync(email, Locking.LOCK);
+    const isSuccess = await lockController.lockingByEmailAsync(email, Locking.LOCK);
 
     if (!isSuccess) {
       return res.status(400).send(isSuccess.message);
@@ -506,6 +506,18 @@ routes.post('/admin/auth', authService.verifyToken, authService.checkRole(Role.A
   console.log(`Admin authenticated: ${adminWithoutPassword.email}`);
 
   return res.status(200).json(adminWithoutPassword);
+});
+
+
+routes.post('/admin/unlock/:id', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).send('Missing required parameter');
+  }
+
+
+
 });
 
 
