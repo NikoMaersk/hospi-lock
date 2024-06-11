@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, HtmlHTMLAttributes } from "react";
 import { formatEpochTime } from "../helper/formatTime";
+import { Lock } from "lucide-react";
 
 const SERVER_IP = process.env.SERVER_IP || 'localhost';
 const PORT = process.env.SERVER_PORT || '4000';
@@ -32,6 +33,17 @@ async function getUsers(): Promise<User[]> {
     console.log(users);
     return users;
 }
+async function OpenClose(mode: string, id: number) {
+    const res = await fetch(`http://${SERVER_IP}:${PORT}/admin/${mode}/${id}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+    });
+}
+
+        
 
 
 async function getLocks(): Promise<Lock[]> {
@@ -219,7 +231,22 @@ export function LockTableItem() {
         }
         fetchLocks();
     }, []);
-
+    let changeStats = document.getElementById("changeStatus") as HTMLInputElement;
+    
+    function changeOpenCloseText(mode: string, id: number) {
+        
+        if(changeStats.textContent === "Open")
+        {
+            OpenClose("unlock", id);
+            changeStats.textContent ="Close"
+        }
+        else
+        {
+            OpenClose("lock", id);
+            changeStats.textContent = "Open"
+        }
+    }
+    
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
@@ -241,20 +268,29 @@ export function LockTableItem() {
                         <th>IP</th>
                         <th>Lock status</th>
                         <th>Registered user</th>
+                        <th>Open/close</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {lockList.map((lock: Lock, index: number) => {
-                        return (
-                            <tr className="border-b-2" key={index}>
-                                <td>{lock.id}</td>
-                                <td>{lock.ip}</td>
-                                <td>{lock.status}</td>
-                                <td>{lock.email}</td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
+    {lockList.map((lock: Lock, index: number) => {
+        return (
+            <tr className="border-b-2" key={index}>
+                <td>{lock.id}</td>
+                <td>{lock.ip}</td>
+                <td>{lock.status}</td>
+                <td>{lock.email}</td>
+                <td>
+                {
+                    (lock.status === 0)
+                    ? <button onClick={() => changeOpenCloseText('lock', lock.id)} id="changeStatus" value={"test"}>Close</button>
+                    : <button onClick={() => changeOpenCloseText('unlock', lock.id)} id="changeStatus" value={"test"}>Open</button>
+                }
+                </td>
+            </tr>
+        );
+    })}
+</tbody>
+
             </table>
         </div>
     );
