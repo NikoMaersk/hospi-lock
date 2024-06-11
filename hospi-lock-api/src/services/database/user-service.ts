@@ -1,6 +1,7 @@
 import { RedisClientDb0 } from "./database-service";
 import { User, UserRequest } from "../../models/user";
 import { IRoleService } from "../interfaces/role-service";
+const bcrypt = require('bcryptjs');
 
 /**
  * Handles CRUD operation relevant for the User
@@ -118,10 +119,12 @@ export default class UserService implements IRoleService<User> {
         }
 
         let now = new Date();
+        const salt: string = await bcrypt.genSalt();
+        const hashedPassword: string = await bcrypt.hash(user.password, salt);
 
         await RedisClientDb0.hSet(`user:${lowerCaseEmail}`, {
             email: lowerCaseEmail,
-            password: user.password,
+            password: hashedPassword,
             firstName: user.firstName,
             lastName: user.lastName,
             regDate: now.toISOString(),
@@ -149,7 +152,13 @@ export default class UserService implements IRoleService<User> {
 
         const tempUser = getUserRequest.user;
 
-        await RedisClientDb0.hSet(`user:${tempUser.email}`, 'password', newPassword);
+        const newSalt: string = await bcrypt.genSalt();
+        const newHashedPassword: string = await bcrypt.hash(newPassword, newSalt);
+
+        await RedisClientDb0.hSet(`user:${tempUser.email}`, {
+            hashedPassword: newHashedPassword,
+            salt: newSalt,
+        });
 
         return getUserRequest;
     }
