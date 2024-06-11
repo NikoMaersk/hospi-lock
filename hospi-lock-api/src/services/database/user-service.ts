@@ -2,8 +2,17 @@ import { RedisClientDb0 } from "./database-service";
 import { User, UserRequest } from "../../models/user";
 import { IRoleService } from "../interfaces/role-service";
 
+/**
+ * Handles CRUD operation relevant for the User
+ */
 export default class UserService implements IRoleService<User> {
     
+    /**
+     * Retrieves a user by email
+     * @param email email to retrieve user by
+     * @returns success status including the User object
+     */
+
     public async getUserByEmailAsync(email: string): Promise<UserRequest> {
         const lowerCaseEmail = email.toLowerCase();
         const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
@@ -24,6 +33,11 @@ export default class UserService implements IRoleService<User> {
     }
 
     
+    /**
+     * Retrieves all stored users
+     * @returns dictionary with users
+     */
+
     public async getAllUsersAsync(): Promise<Record<string, User>> {
         try {
             const keys = await RedisClientDb0.keys("user:*");
@@ -53,6 +67,12 @@ export default class UserService implements IRoleService<User> {
     }
 
 
+    /**
+     * Retrieves partial user
+     * @param amount number of users to retrieve
+     * @returns dictionary with users
+     */
+
     public async getPartialUsersAsync(amount: number): Promise<Record<string, User>> {
         const cursor = 0;
         const pattern = 'user:*';
@@ -81,6 +101,12 @@ export default class UserService implements IRoleService<User> {
     }
 
 
+    /**
+     * Creates a user in the database
+     * @param user to be created
+     * @returns success status
+     */
+
     public async addUserAsync(user: User): Promise<UserRequest> {
         const lowerCaseEmail = user.email.toLowerCase();
         const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
@@ -106,6 +132,13 @@ export default class UserService implements IRoleService<User> {
     }
 
 
+    /**
+     * Updates the password for a user
+     * @param email key to the user
+     * @param newPassword
+     * @returns success status
+     */
+
     public async patchPasswordAsync(email: string, newPassword: string): Promise<UserRequest> {
 
         const getUserRequest: UserRequest = await this.getUserByEmailAsync(email);
@@ -121,6 +154,12 @@ export default class UserService implements IRoleService<User> {
         return getUserRequest;
     }
 
+
+    /**
+     * Implementation of the IRoleService interface. Check if a user is registered
+     * @param email key to the user
+     * @returns success status including the user if success
+     */
 
     public async checkExistenceAsync(email: string): Promise<{ success: boolean, role?: User; }> {
 

@@ -13,6 +13,10 @@ export enum Role {
 }
 
 
+/**
+ * Handles authentication and token generation/verfication
+ */
+
 export default class AuthService {
 
     private roleServices: Map<Role, IRoleService<BaseRole>>;
@@ -25,7 +29,7 @@ export default class AuthService {
 
 
     public async authenticationAsync<T extends BaseRole>(email: string, password: string, role: Role):
-        Promise<{ success: boolean, message: string, statusCode: number, role?: User | Admin }> {
+        Promise<{ success: boolean, message: string, statusCode: number, role?: T }> {
 
         let response = { success: false, message: '', statusCode: 400 };
 

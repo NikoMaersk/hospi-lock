@@ -6,6 +6,10 @@ import UserService from "./database/user-service";
 import LockController from "./lock-controller";
 
 
+/**
+ * Factory to easy instantiate the service classes
+ */
+
 export class ServiceFactory {
     
     private static instance: ServiceFactory;

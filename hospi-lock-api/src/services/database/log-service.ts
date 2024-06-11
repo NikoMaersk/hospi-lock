@@ -1,8 +1,20 @@
 import { Log, LogRequest } from "../../models/log";
 import { RedisClientDb1 } from "./database-service";
 
+/**
+ * Handles CRUD operation related to the logs
+ */
+
 export default class LogService {
     
+    /**
+     * Creates a log storing login attempt information
+     * @param email represent the user
+     * @param authenticationStatus login attempt success
+     * @param ip ip to store
+     * @returns success status
+     */
+
     public async logSigninMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
         try {
             const timestamp = Date.now();
@@ -34,6 +46,11 @@ export default class LogService {
         }
     }
 
+    /**
+     * Retrieves all sign in logs
+     * @returns array of logs
+     */
+
 
     public async getAllSigninLogsAsync(): Promise<Log[]> {
 
@@ -57,6 +74,13 @@ export default class LogService {
         }
     }
 
+
+    /**
+     * Retrieves partial logs
+     * @param offset where to start
+     * @param limit how many logs
+     * @returns array of logs
+     */
 
     public async getPartialSigninLogsAsync(offset: number, limit: number): Promise<Log[]> {
 
@@ -85,6 +109,14 @@ export default class LogService {
     }
 
 
+    /**
+     * Creates a log based on information send from the lock
+     * @param timestamp time the log should be stored as
+     * @param ip ip for the lock
+     * @param status status of the lock
+     * @returns 
+     */
+
     public async logLockingMessageAsync(timestamp: string, ip: string, status: string): Promise<LogRequest> {
         try {
             const logEntry = {
@@ -108,6 +140,11 @@ export default class LogService {
     }
 
 
+    /**
+     * Retrieves all logs involving the locks
+     * @returns array of logs
+     */
+
     public async getAllLockingLogsAsync(): Promise<Log[]> {
 
         try {
@@ -130,6 +167,13 @@ export default class LogService {
         }
     }
 
+
+    /**
+     * Retrieves partial logs
+     * @param offset where to start
+     * @param limit how many logs
+     * @returns array of logs
+     */
 
     public async getPartialLockingLogsAsync(offset: number, limit: number): Promise<Log[]> {
         
@@ -155,6 +199,12 @@ export default class LogService {
         return deserializedData;
     }
 
+    
+    /**
+     * Parses the ip if it is in ipv6 format
+     * @param ip 
+     * @returns 
+     */
 
     public static parseIPAddress(ip: string): string {
 

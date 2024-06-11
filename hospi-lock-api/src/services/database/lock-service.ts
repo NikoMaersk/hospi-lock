@@ -2,13 +2,28 @@ import { RedisClientDb0 } from "./database-service";
 import { Lock, LockRequest } from "../../models/lock";
 import UserService from "./user-service";
 
+/**
+ * Handles CRUD operation related to the Lock
+ */
+
 export default class LockService {
 
     private userService: UserService;
 
+    /**
+     * Creates a LockService
+     * @param userService an instance of the UserService as DI
+     */
     public constructor(userService: UserService) {
         this.userService = userService;
     }
+
+
+    /**
+     * Creates a new lock in the database
+     * @param lock the lock to be added
+     * @returns wether or not it succeeds
+     */
 
     public async addLockAsync(lock: Lock): Promise<LockRequest> {
 
@@ -39,6 +54,11 @@ export default class LockService {
     }
 
 
+    /**
+     * Retrieves all locks from the database
+     * @returns dictionary storing the retrieved locks
+     */
+
     public async getAllLocksAsync(): Promise<Record<string, Lock>> {
         try {
             const keys = await RedisClientDb0.keys('lock:*')
@@ -67,6 +87,12 @@ export default class LockService {
     }
 
 
+    /**
+     * Retrieves a Lock by the Id
+     * @param id id to retrieve the lock by
+     * @returns true if it succeeds including the lock
+     */
+
     public async getLockByIdAsync(id: string): Promise<LockRequest> {
         const lock = await RedisClientDb0.hGetAll(`lock:${id}`);
 
@@ -77,6 +103,12 @@ export default class LockService {
         return { success: true, message: 'Lock fetched', statusCode: 200, lock: lock };
     }
 
+
+    /**
+     * Retrieves a specific Lock by email
+     * @param email email to retrieve lock by
+     * @returns true if it succeeds including the lock
+     */
 
     public async getLockByEmail(email: string): Promise<LockRequest> {
         const lowerCaseEmail = email.toLowerCase();
@@ -101,6 +133,11 @@ export default class LockService {
         return { success: true, message: 'Lock fetched', statusCode: 200, lock: lock };
     }
 
+    /**
+     * Retrieves the status of a specific lock
+     * @param id key to the lock
+     * @returns true if it finds the lock including the status
+     */
 
     public async getLockStatusAsync(id: string): Promise<{ success: boolean, message: string, statusCode: number, lockStatus?: boolean }> {
         const lockRequest: LockRequest = await this.getLockByIdAsync(id);
@@ -115,6 +152,12 @@ export default class LockService {
     }
 
 
+    /**
+     * Retrieves the IP of a specific lock
+     * @param email to retrieve the lock by
+     * @returns the IP
+     */
+
     public async getLockIPAsync(email: string): Promise<string> {
         const lockRequest: LockRequest = await this.getLockByEmail(email);
         let ip: string = "";
@@ -126,6 +169,13 @@ export default class LockService {
         return ip;
     }
 
+
+    /**
+     * Adds the lock id to the user
+     * @param email representing the user
+     * @param id representing the lock
+     * @returns success status
+     */
 
     public async addLockForUserAsync(email: string, id: string): Promise<LockRequest> {
         const authResult = await this.userService.checkExistenceAsync(email);
@@ -163,6 +213,13 @@ export default class LockService {
         return { success: true, message: 'User registeret for the specified lock', statusCode: 201 };
     }
 
+
+    /**
+     * Changes the status of a lock
+     * @param lock the lock to be modified
+     * @param status current status
+     * @returns success status
+     */
 
     public async setStatusAsync(lock: Lock, status: boolean): Promise<{ success: boolean, message: string, statusCode: number }> {
         try {

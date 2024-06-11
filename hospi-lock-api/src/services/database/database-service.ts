@@ -6,10 +6,12 @@ const PORT = process.env.DB_PORT;
 
 const url = `redis://${IP}:${PORT}`;
 
+// Creates a redis client instance pointing to database0
 const RedisClientDb0 = redis.createClient({
     url
 });
 
+// Creates a redis client instance pointing to database1
 const RedisClientDb1 = redis.createClient({
     url,
     database: 1
