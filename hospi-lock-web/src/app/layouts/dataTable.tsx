@@ -38,12 +38,12 @@ async function OpenClose(mode: string, id: number) {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+            'Content-Type': 'application/json',
         },
     });
 }
 
-        
+
 
 
 async function getLocks(): Promise<Lock[]> {
@@ -201,7 +201,7 @@ export function LockTableItem() {
     const handlePost = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         try {
-            const res = await fetch('http://localhost:4000/locks', {
+            const res = await fetch(`http://${SERVER_IP}:${PORT}/locks`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -231,22 +231,23 @@ export function LockTableItem() {
         }
         fetchLocks();
     }, []);
-    let changeStats = document.getElementById("changeStatus") as HTMLInputElement;
-    
-    function changeOpenCloseText(mode: string, id: number) {
-        
-        if(changeStats.textContent === "Open")
-        {
-            OpenClose("unlock", id);
-            changeStats.textContent ="Close"
-        }
-        else
-        {
-            OpenClose("lock", id);
-            changeStats.textContent = "Open"
+
+
+    function changeOpenCloseText(button: HTMLButtonElement, mode: string, id: number) {
+        try {
+            if (button.textContent === "Open") {
+                button.textContent = "Close";
+                OpenClose("unlock", id);
+            } else {
+                button.textContent = "Open";
+                OpenClose("lock", id);
+            }
+        } catch (e) {
+            console.log(e);
         }
     }
-    
+
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
@@ -272,24 +273,25 @@ export function LockTableItem() {
                     </tr>
                 </thead>
                 <tbody>
-    {lockList.map((lock: Lock, index: number) => {
-        return (
-            <tr className="border-b-2" key={index}>
-                <td>{lock.id}</td>
-                <td>{lock.ip}</td>
-                <td>{lock.status}</td>
-                <td>{lock.email}</td>
-                <td>
-                {
-                    (lock.status === 0)
-                    ? <button onClick={() => changeOpenCloseText('lock', lock.id)} id="changeStatus" value={"test"}>Close</button>
-                    : <button onClick={() => changeOpenCloseText('unlock', lock.id)} id="changeStatus" value={"test"}>Open</button>
-                }
-                </td>
-            </tr>
-        );
-    })}
-</tbody>
+                    {lockList.map((lock: Lock, index: number) => {
+                        return (
+                            <tr className="border-b-2" key={index}>
+                                <td>{lock.id}</td>
+                                <td>{lock.ip}</td>
+                                <td>{lock.status}</td>
+                                <td>{lock.email}</td>
+                                <td>
+                                    {
+                                        (lock.status === 0)
+                                            ? <button onClick={(event) => changeOpenCloseText(event.currentTarget as HTMLButtonElement, 'lock', lock.id)} value={"test"}>Close</button>
+                                            : <button onClick={(event) => changeOpenCloseText(event.currentTarget as HTMLButtonElement, 'unlock', lock.id)} value={"test"}>Open</button>
+                                    }
+                                </td>
+
+                            </tr>
+                        );
+                    })}
+                </tbody>
 
             </table>
         </div>
