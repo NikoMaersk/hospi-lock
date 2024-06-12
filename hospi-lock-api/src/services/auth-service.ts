@@ -57,7 +57,11 @@ export default class AuthService {
 
         console.log(`comparing ${password} with ${tempRole.password}`);
 
-        if (!tempRole.password || await !bcrypt.compare(password, tempRole.password)) {
+        const isAuthorized: boolean = await bcrypt.compare(password, tempRole.password);
+
+        console.log(`Authorized: ${isAuthorized}`)
+
+        if (!tempRole.password || !isAuthorized) {
             response.message = 'Invalid password';
             response.statusCode = 401;
             return response;
