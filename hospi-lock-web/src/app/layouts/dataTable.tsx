@@ -233,22 +233,20 @@ export function LockTableItem() {
     }, []);
 
 
-    function changeOpenCloseText(mode: string, id: number) {
-        let changeStats = document.getElementById("changeStatus") as HTMLInputElement;
-
+    function changeOpenCloseText(button: HTMLButtonElement, mode: string, id: number) {
         try {
-            if (changeStats.textContent === "Open") {
+            if (button.textContent === "Open") {
+                button.textContent = "Close";
                 OpenClose("unlock", id);
-                changeStats.textContent = "Close"
-            }
-            else {
+            } else {
+                button.textContent = "Open";
                 OpenClose("lock", id);
-                changeStats.textContent = "Open"
             }
         } catch (e) {
-            console.log(e)
+            console.log(e);
         }
     }
+
 
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -285,10 +283,11 @@ export function LockTableItem() {
                                 <td>
                                     {
                                         (lock.status === 0)
-                                            ? <button onClick={() => changeOpenCloseText('lock', lock.id)} id="changeStatus" value={"test"}>Close</button>
-                                            : <button onClick={() => changeOpenCloseText('unlock', lock.id)} id="changeStatus" value={"test"}>Open</button>
+                                            ? <button onClick={(event) => changeOpenCloseText(event.currentTarget as HTMLButtonElement, 'lock', lock.id)} value={"test"}>Close</button>
+                                            : <button onClick={(event) => changeOpenCloseText(event.currentTarget as HTMLButtonElement, 'unlock', lock.id)} value={"test"}>Open</button>
                                     }
                                 </td>
+
                             </tr>
                         );
                     })}
