@@ -201,7 +201,7 @@ export function LockTableItem() {
     const handlePost = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         try {
-            const res = await fetch('http://localhost:4000/locks', {
+            const res = await fetch(`http://${SERVER_IP}:${PORT}/locks`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
