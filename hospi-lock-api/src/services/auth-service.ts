@@ -4,6 +4,7 @@ import { NextFunction, Request, Response } from "express";
 import { IRoleService } from "./interfaces/role-service";
 import { BaseRole } from "../models/baseRole";
 
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 
@@ -54,7 +55,9 @@ export default class AuthService {
 
         const tempRole = verifyResult.role;
 
-        if (!tempRole.password || password !== tempRole.password) {
+        console.log(`comparing ${password} with ${tempRole.password}`);
+
+        if (!tempRole.password || await !bcrypt.compare(password, tempRole.password)) {
             response.message = 'Invalid password';
             response.statusCode = 401;
             return response;

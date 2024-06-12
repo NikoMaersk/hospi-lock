@@ -4,7 +4,7 @@ import React, { useState, useEffect, HtmlHTMLAttributes } from "react";
 import { formatEpochTime } from "../helper/formatTime";
 import { Lock } from "lucide-react";
 
-const SERVER_IP = process.env.SERVER_IP || 'localhost';
+const SERVER_IP = process.env.SERVER_IP || '10.176.69.180';
 const PORT = process.env.SERVER_PORT || '4000';
 
 async function getLogs(): Promise<Log[]> {

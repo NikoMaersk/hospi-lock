@@ -2,12 +2,16 @@ import { RedisClientDb1 } from "./database-service";
 import { Admin, AdminRequest } from "../../models/admin";
 import { IRoleService } from "../interfaces/role-service";
 
+const bcrypt = require('bcryptjs');
+
 /**
  * Handles CRUD operations related to the Admin object
  */
 
 
 export default class AdminService implements IRoleService<Admin> {
+
+    static DEFAULT_ICON_URL: string = "https://ui-avatars.com/api/?name=Admin&background=0D8ABC&color=fff&length=1";
 
     /**
      * Creates a new Admin in the database
@@ -25,10 +29,13 @@ export default class AdminService implements IRoleService<Admin> {
 
         console.log(`email: ${admin.email}, password: ${admin.password}, url: ${admin.iconUrl}`)
 
+        const salt: string = await bcrypt.genSalt();
+        const hashedPassword: string = await bcrypt.hash(admin.password, salt);
+
         await RedisClientDb1.hSet(`admin:${admin.email}`, {
             email: lowerCaseEmail,
-            password: admin.password,
-            iconUrl: admin.iconUrl || "",
+            password: hashedPassword,
+            iconUrl: admin.iconUrl || AdminService.DEFAULT_ICON_URL,
         });
 
         return { success: true, message: 'Admin created', statusCode: 201 }

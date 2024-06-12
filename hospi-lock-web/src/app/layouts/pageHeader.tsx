@@ -10,6 +10,9 @@ import ThemeSwitch from "../components/ThemeSwitch";
 import ModalLogin from "../components/modalLogin";
 import { useAuth } from "../helper/authContext";
 
+const IP = process.env.SERVER_IP || '10.176.69.180';
+const PORT = process.env.SERVER_PORT || '4000';
+
 export default function PageHeader() {
     const inputRef = useRef<HTMLInputElement>(null);
     const [showFullWidthSearch, setShowFullWidthSearch] = useState(false);
@@ -25,10 +28,7 @@ export default function PageHeader() {
 
     const handleLogin = async (email: string, password: string) => {
         try {
-            const SERVER_IP = process.env.SERVER_IP || 'localhost';
-            const PORT = process.env.SERVER_PORT || '4000';
-
-            const response = await fetch(`http://${SERVER_IP}:${PORT}/admin/signin`, {
+            const response = await fetch(`http://${IP}:${PORT}/admin/signin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -57,7 +57,7 @@ export default function PageHeader() {
 
     const checkAuth = useCallback(async () => {
         try {
-            const response = await fetch('http://localhost:4000/admin/auth', {
+            const response = await fetch(`http://${IP}:${PORT}/admin/auth`, {
                 method: 'POST',
                 credentials: 'include',
             });

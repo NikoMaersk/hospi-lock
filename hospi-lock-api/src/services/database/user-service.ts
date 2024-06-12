@@ -1,6 +1,8 @@
 import { RedisClientDb0 } from "./database-service";
 import { User, UserRequest } from "../../models/user";
 import { IRoleService } from "../interfaces/role-service";
+import { capitalizeFirstLetter } from "../../util/string-util";
+const bcrypt = require('bcryptjs');
 
 /**
  * Handles CRUD operation relevant for the User
@@ -117,13 +119,18 @@ export default class UserService implements IRoleService<User> {
             return { success: false, message: 'User already exists', statusCode: 409 };
         }
 
-        let now = new Date();
+        let now = new Date();      
+        const salt: string = await bcrypt.genSalt();
+        const hashedPassword: string = await bcrypt.hash(user.password, salt);
+
+        const capitalizeFirstName: string = capitalizeFirstLetter(user.firstName);
+        const capitalizedLastName: string = capitalizeFirstLetter(user.lastName);
 
         await RedisClientDb0.hSet(`user:${lowerCaseEmail}`, {
             email: lowerCaseEmail,
-            password: user.password,
-            firstName: user.firstName,
-            lastName: user.lastName,
+            password: hashedPassword,
+            firstName: capitalizeFirstName,
+            lastName: capitalizedLastName,
             regDate: now.toISOString(),
             lockId: user.lockId || "",
         });
@@ -149,7 +156,13 @@ export default class UserService implements IRoleService<User> {
 
         const tempUser = getUserRequest.user;
 
-        await RedisClientDb0.hSet(`user:${tempUser.email}`, 'password', newPassword);
+        const newSalt: string = await bcrypt.genSalt();
+        const newHashedPassword: string = await bcrypt.hash(newPassword, newSalt);
+
+        await RedisClientDb0.hSet(`user:${tempUser.email}`, {
+            hashedPassword: newHashedPassword,
+            salt: newSalt,
+        });
 
         return getUserRequest;
     }
