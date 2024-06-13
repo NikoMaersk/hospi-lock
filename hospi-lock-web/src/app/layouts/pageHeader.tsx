@@ -9,6 +9,7 @@ import logo from "../assets/logo.png"
 import ThemeSwitch from "../../components/ThemeSwitch";
 import ModalLogin from "../../components/modalLogin";
 import { useAuth } from "../../helper/authContext";
+import { useRouter } from "next/navigation";
 
 const IP = process.env.SERVER_IP || '10.176.69.180';
 const PORT = process.env.SERVER_PORT || '4000';
@@ -20,6 +21,8 @@ export default function PageHeader() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [iconUrl, setIconUrl] = useState('');
     const { isLoggedIn, setIsLoggedIn } = useAuth();
+
+    const router = useRouter();
 
     const toggleModal = () => {
         setIsModalOpen(!isModalOpen)
@@ -46,6 +49,7 @@ export default function PageHeader() {
                 console.log('Login successful');
                 setIsLoggedIn(true);
                 setIconUrl(iconUrl);
+                router.push('/admin/dashboard');
             } else {
                 console.error('Login failed');
             }

@@ -3,8 +3,17 @@
 import React from "react";
 import PageHeader from "./pageHeader";
 import Welcome from "./welcome";
+import { useAuth } from "@/helper/authContext";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+    const {isLoggedIn} = useAuth();
+    const router = useRouter();
+
+    if (isLoggedIn) {
+        router.push('/admin/dashboard');
+    }
+
     return (
         <div className="max-h-screen flex flex-col">
             <PageHeader />
