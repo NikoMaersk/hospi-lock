@@ -2,7 +2,7 @@
 
 import { ElementType } from "react";
 import { twMerge } from "tailwind-merge";
-import { buttonStyles } from "../components/Button";
+import { buttonStyles } from "../../components/Button";
 import { LayoutDashboard, LineChart, LockOpen, ScrollText, User } from "lucide-react";
 import Link from "next/link";
 

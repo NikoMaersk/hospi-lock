@@ -1,4 +1,4 @@
-import { AuthProvider } from "@/app/helper/authContext";
+import { AuthProvider } from "@/helper/authContext";
 import { LogTableItem } from "../../layouts/dataTable";
 import AdminComponent from "@/app/layouts/adminComponent";
 

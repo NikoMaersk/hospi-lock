@@ -1,19 +1,27 @@
 'use client'
 
 import React, { useState, useEffect, HtmlHTMLAttributes } from "react";
-import { formatEpochTime } from "../helper/formatTime";
-import { Lock } from "lucide-react";
-import Loading from "../components/loading";
+import { formatEpochTime } from "../../helper/formatTime";
+import { Lock, LockIcon, User } from "lucide-react";
+import Loading from "../../components/loading";
+import { Button } from "@/components/Button";
 
 const SERVER_IP = process.env.SERVER_IP || '10.176.69.180';
 const PORT = process.env.SERVER_PORT || '4000';
-
+const LOG_LIMIT = 20;
 
 interface Log {
     timestamp: string;
     email: string;
     ip: string;
     success: boolean;
+}
+
+
+interface LockLog {
+    timestamp: string;
+    ip: string;
+    status: number;
 }
 
 
@@ -35,13 +43,43 @@ interface Lock {
 
 
 export function LogTableItem() {
+    const [isLoginCurrent, setIsLoginCurrent] = useState(true);
+
+    return (
+        <div className="flex flex-col gap-1 mt-0.5 rounded-md border border-red-600">
+            <div className="w-full inline text-center pb-1 bg-red-600 
+            text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent">
+                Logs
+            </div>
+            <div className="flex flex-row items-center justify-center">
+                <Button size="square" className={`gap-2 w-24 ${isLoginCurrent ? "bg-red-600 text-white" : "bg-transparent"} border border-red-600 rounded-r-none hover:bg-red-600 hover:text-white`}
+                    onClick={() => setIsLoginCurrent(true)}>
+                    <User />
+                    <h1>Login</h1>
+                </Button>
+                <Button size="square" className={`gap-2 w-24 ${isLoginCurrent ? "bg-transparent" : "bg-red-600 text-white"} border border-red-600 rounded-l-none hover:bg-red-600 hover:text-white`}
+                    onClick={() => setIsLoginCurrent(false)}>
+                    <LockIcon />
+                    <h1>Locks</h1>
+                </Button>
+            </div>
+            {isLoginCurrent ? (
+                <SigninLogChild />
+            ) : (
+                <LockLogChild />
+            )}
+        </div>
+    );
+}
+
+
+function SigninLogChild() {
     const [logList, setLogList] = useState<Log[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const limit = 20;
-
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const limit = LOG_LIMIT;
 
     useEffect(() => {
         async function fetchLogs() {
@@ -75,58 +113,143 @@ export function LogTableItem() {
         setCurrentPage(page);
     };
 
-
-    if (loading) return <Loading />;
-    if (error) return <div>Error: {error}</div>;
-
-
     return (
-        <div className="flex flex-col gap-1 mt-1 rounded-md border border-red-600">
-            <div className="w-full inline text-center pb-1 bg-red-600 
-            text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent">
-                Logs
-            </div>
-            <table className="w-full text-center mt-4 pr-4">
-                <thead className="border-b-2">
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Email</th>
-                        <th>IP</th>
-                        <th>Authenticated</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {logList.map((log: Log, index: number) => {
-                        const formattedTime = formatEpochTime(new Date(parseInt(log.timestamp)));
-                        return (
-                            <tr className="border-b-2 border-x-2" key={index}>
-                                <td className="border-x-2" >{formattedTime.date}</td>
-                                <td className="border-x-2" >{formattedTime.time}</td>
-                                <td className="border-x-2" >{log.email}</td>
-                                <td className="border-x-2" >{log.ip}</td>
-                                <td className="border-x-2" >{log.success ? 'Yes' : 'No'}</td>
+        <div>
+            {!loading ? (
+                <div>
+                    <table className="w-full text-center mt-4 pr-4">
+                        <thead className="border-b-2">
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Email</th>
+                                <th>IP</th>
+                                <th>Authenticated</th>
                             </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-            <div className="flex justify-center">
-                <ul className="flex list-none">
-                    {Array.from({ length: totalPages }, (_, index) => (
-                        <li key={index} className="">
-                            <button
-                                onClick={() => handlePageClick(index + 1)}
-                                className={`px-3 py-1 ${currentPage === (index + 1) ? 'bg-red-600 text-white' : 'bg-gray-300 text-black'}`}>
-                                {index + 1}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+                        </thead>
+                        <tbody>
+                            {logList.map((log: Log, index: number) => {
+                                const formattedTime = formatEpochTime(new Date(parseInt(log.timestamp)));
+                                return (
+                                    <tr className="border-b-2 border-x-2" key={index}>
+                                        <td className="border-x-2" >{formattedTime.date}</td>
+                                        <td className="border-x-2" >{formattedTime.time}</td>
+                                        <td className="border-x-2" >{log.email}</td>
+                                        <td className="border-x-2" >{log.ip}</td>
+                                        <td className="border-x-2" >{log.success ? 'Yes' : 'No'}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    <div className="flex justify-center">
+                        <ul className="flex list-none">
+                            {Array.from({ length: totalPages }, (_, index) => (
+                                <li key={index} className="">
+                                    <button
+                                        onClick={() => handlePageClick(index + 1)}
+                                        className={`px-3 py-1 ${currentPage === (index + 1) ? 'bg-red-600 text-white' : 'bg-gray-300 text-black'}`}>
+                                        {index + 1}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            ) : (
+                <Loading />
+            )}
         </div>
     );
-}
+};
+
+
+function LockLogChild() {
+    const [lockLogList, setLockLogList] = useState<LockLog[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(false);
+    const limit = LOG_LIMIT;
+
+    useEffect(() => {
+        async function fetchLogs() {
+            setLoading(true);
+            try {
+                const offset = (currentPage - 1) * limit;
+                const res = await fetch(`http://${SERVER_IP}:${PORT}/logs/lock?offset=${offset}&limit=${limit}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    throw new Error('Failed to fetch logs');
+                }
+                const data = await res.json();
+                const count: number = data.totalItems;
+                const logs: LockLog[] = data.logs;
+                setLockLogList(logs);
+                setTotalPages(Math.ceil(count / limit));
+                setLoading(false);
+            } catch (err: any) {
+                setError(err.message);
+            }
+        }
+
+        fetchLogs();
+    }, [currentPage]);
+
+
+    const handlePageClick = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    return (
+        <div>
+            {!loading ? (
+                <div>
+                    <table className="w-full text-center mt-4 pr-4">
+                        <thead className="border-b-2">
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>IP</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {lockLogList.map((log: LockLog, index: number) => {
+                                const formattedTime = formatEpochTime(new Date(parseInt(log.timestamp)));
+                                return (
+                                    <tr className="border-b-2 border-x-2" key={index}>
+                                        <td className="border-x-2" >{formattedTime.date}</td>
+                                        <td className="border-x-2" >{formattedTime.time}</td>
+                                        <td className="border-x-2" >{log.ip}</td>
+                                        <td className="border-x-2">{log.status}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    <div className="flex justify-center">
+                        <ul className="flex list-none">
+                            {Array.from({ length: totalPages }, (_, index) => (
+                                <li key={index} className="">
+                                    <button
+                                        onClick={() => handlePageClick(index + 1)}
+                                        className={`px-3 py-1 ${currentPage === (index + 1) ? 'bg-red-600 text-white' : 'bg-gray-300 text-black'}`}>
+                                        {index + 1}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            ) : (
+                <Loading />
+            )}
+        </div>
+    );
+};
 
 
 export function UserTableItem() {
@@ -134,7 +257,7 @@ export function UserTableItem() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-
+    
     async function getUsers(): Promise<User[]> {
         const res = await fetch(`http://${SERVER_IP}:${PORT}/users`, {
             method: 'GET',
@@ -142,14 +265,14 @@ export function UserTableItem() {
         });
         if (!res.ok) {
             throw new Error('Failed to fetch users');
-        }
+            }
         const data: Record<string, User> = await res.json();
         const users: User[] = Object.values(data);
         console.log(users);
         return users;
     }
 
-
+    
     useEffect(() => {
         async function fetchUsers() {
             try {
@@ -165,8 +288,9 @@ export function UserTableItem() {
     }, []);
 
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <Loading />;
     if (error) return <div>Error: {error}</div>;
+
 
     return (
         <div className="flex flex-col gap-1 mt-1 rounded-md border border-red-600">

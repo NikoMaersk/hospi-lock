@@ -3,8 +3,8 @@
 import React from "react";
 import PageHeader from "./pageHeader";
 import Sidebar from "./sidebar";
-import { useAuth } from "../helper/authContext";
-import Loading from "../components/loading";
+import { useAuth } from "../../helper/authContext";
+import Loading from "../../components/loading";
 
 export default function AdminComponent({ children }: { children: React.ReactNode }) {
     const { isLoggedIn } = useAuth();

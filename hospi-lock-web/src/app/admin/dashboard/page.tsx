@@ -1,4 +1,4 @@
-import { AuthProvider } from '@/app/helper/authContext';
+import { AuthProvider } from '@/helper/authContext';
 import AdminComponent from '../../layouts/adminComponent';
 import Welcome from '@/app/layouts/welcome';
 

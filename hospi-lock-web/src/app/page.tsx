@@ -1,4 +1,4 @@
-import { AuthProvider } from "./helper/authContext";
+import { AuthProvider } from "../helper/authContext";
 import HomePage from "./layouts/home";
 
 export default function Home() {
