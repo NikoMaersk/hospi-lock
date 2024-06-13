@@ -14,10 +14,10 @@ const config: Config = {
       },
       colors: {
         background: "#36393F",
-        text: "#FFFFFF",
+        text: "#475569",
         accent: "#7289DA",
         accentText: "#FFFFFF",
-        secondaryText: "#B9BBBE",
+        secondaryText: "#FFFFFF",
         primaryButton: "#5865F2",
         secondaryButton: "#4E5D94",
         secondary: {

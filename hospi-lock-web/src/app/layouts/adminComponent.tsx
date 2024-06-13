@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from "react";
+import React from "react";
 import PageHeader from "./pageHeader";
 import Sidebar from "./sidebar";
 import { useAuth } from "../helper/authContext";
-import Welcome from "./welcome";
+import Loading from "../components/loading";
 
-export default function AdminComponent({ children }: any) {
+export default function AdminComponent({ children }: { children: React.ReactNode }) {
     const { isLoggedIn } = useAuth();
 
     return (
@@ -20,7 +20,7 @@ export default function AdminComponent({ children }: any) {
                     </div>
                 </div>
             ) : (
-                <Welcome />
+                <Loading />
             )}
         </div>
     );

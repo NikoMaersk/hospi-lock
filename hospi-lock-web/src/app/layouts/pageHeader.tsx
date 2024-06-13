@@ -137,7 +137,7 @@ export default function PageHeader() {
                     <ThemeSwitch />
                 </div>
                 {isLoggedIn ?
-                    (<a href="" className={twMerge(buttonStyles({ variant: "ghost" }), `p-0.5 ml-2`)}>
+                    (<a className={twMerge(buttonStyles({ variant: "ghost" }), `p-0.5 ml-2`)}>
                         <img src={iconUrl}
                             className="rounded-full size-full" />
                     </a>
