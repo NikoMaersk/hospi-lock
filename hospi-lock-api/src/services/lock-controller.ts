@@ -66,6 +66,12 @@ export default class LockController {
     }
 
 
+    /**
+     * Used to send a lock request by user id
+     * @param id user id
+     * @param lock enum representing lock/unlock
+     * @returns success true/false
+     */
 
     public async lockingByIdAsync(id: string, lock: Locking): Promise<{ success: boolean, message: string | unknown }> {
         const lockRequest: LockRequest = await this.lockService.getLockByIdAsync(id);
