@@ -8,7 +8,7 @@ import { Button } from "@/components/Button";
 
 const SERVER_IP = process.env.SERVER_IP || '10.176.69.180';
 const PORT = process.env.SERVER_PORT || '4000';
-const LOG_LIMIT = 20;
+const PAGINATION_LIMIT = 15;
 
 interface Log {
     timestamp: string;
@@ -29,19 +29,20 @@ interface User {
     email: string;
     firstName: string;
     lastName: string;
-    date: string;
+    regDate: string;
     lockId: string;
 }
 
 
 interface Lock {
-    id: number;
     ip: string;
-    status: number;
+    id: number;
     email: string;
+    status: number;
 }
 
 
+// Should be moved to cleanup this file
 export function LogTableItem() {
     const [isLoginCurrent, setIsLoginCurrent] = useState(true);
 
@@ -73,13 +74,14 @@ export function LogTableItem() {
 }
 
 
+// Should be moved to cleanup this file
 function SigninLogChild() {
     const [logList, setLogList] = useState<Log[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const limit = LOG_LIMIT;
+    const limit = PAGINATION_LIMIT;
 
     useEffect(() => {
         async function fetchLogs() {
@@ -116,8 +118,8 @@ function SigninLogChild() {
     return (
         <div>
             {!loading ? (
-                <div>
-                    <table className="w-full text-center mt-4 pr-4">
+                <div className="table-container">
+                    <table className="w-full text-center pr-4 default-table">
                         <thead className="border-b-2">
                             <tr>
                                 <th>Date</th>
@@ -164,13 +166,14 @@ function SigninLogChild() {
 };
 
 
+// Should be moved to cleanup this file
 function LockLogChild() {
     const [lockLogList, setLockLogList] = useState<LockLog[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
-    const limit = LOG_LIMIT;
+    const limit = PAGINATION_LIMIT;
 
     useEffect(() => {
         async function fetchLogs() {
@@ -206,8 +209,8 @@ function LockLogChild() {
     return (
         <div>
             {!loading ? (
-                <div>
-                    <table className="w-full text-center mt-4 pr-4">
+                <div className="table-container">
+                    <table className="w-full text-center pr-4 default-table">
                         <thead className="border-b-2">
                             <tr>
                                 <th>Date</th>
@@ -252,87 +255,144 @@ function LockLogChild() {
 };
 
 
+// Should be moved to cleanup this file
 export function UserTableItem() {
     const [userList, setUserList] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit: number = PAGINATION_LIMIT;
 
-    
-    async function getUsers(): Promise<User[]> {
-        const res = await fetch(`http://${SERVER_IP}:${PORT}/users`, {
-            method: 'GET',
-            credentials: 'include',
-        });
-        if (!res.ok) {
-            throw new Error('Failed to fetch users');
-            }
-        const data: Record<string, User> = await res.json();
-        const users: User[] = Object.values(data);
-        console.log(users);
-        return users;
-    }
-
-    
     useEffect(() => {
         async function fetchUsers() {
+            setLoading(true);
             try {
-                const users: User[] = await getUsers();
+                const offset = (currentPage - 1) * limit;
+                const res = await fetch(`http://localhost:4000/users?offset=${offset}&limit=${limit}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    throw new Error('Failed to fetch users');
+                }
+                const data = await res.json();
+                const users: User[] = data.users || [];
                 setUserList(users);
+                setTotalPages(Math.ceil(data.totalItems / limit));
+                setLoading(false);
             } catch (err: any) {
                 setError(err.message);
-            } finally {
                 setLoading(false);
             }
         }
-        fetchUsers();
-    }, []);
 
+        fetchUsers();
+    }, [currentPage]);
+
+    const handlePageClick = (page: number) => {
+        setCurrentPage(page);
+    };
 
     if (loading) return <Loading />;
     if (error) return <div>Error: {error}</div>;
 
-
     return (
-        <div className="flex flex-col gap-1 mt-1 rounded-md border border-red-600">
-            <div className="w-full inline text-center pb-1 bg-red-600 
-            text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent ">
+        <div className="flex flex-col mt-1 rounded-md border border-red-600">
+            <div className="w-full inline text-center pb-1 bg-red-600 text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent ">
                 Users
             </div>
-            <table className="w-full text-center mt-4 pr-4">
-                <thead className="border-b-2">
-                    <tr>
-                        <th>Email</th>
-                        <th>First name</th>
-                        <th>Last name</th>
-                        <th>Registration datetime</th>
-                        <th>Registered lock</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {userList.map((user: User, index: number) => {
-                        const formattedTime = formatEpochTime(new Date(user.date));
-                        return (
-                            <tr className="border-b-2 border-x-2" key={index}>
-                                <td className="border-x-2">{user.email}</td>
-                                <td className="border-x-2">{user.firstName}</td>
-                                <td className="border-x-2">{user.lastName}</td>
-                                <td className="border-x-2">{formattedTime.date} {formattedTime.time}</td>
-                                <td className="border-x-2">{user.lockId}</td>
+            {!loading ? (
+                <div className="table-container">
+                    <table className="w-full text-center pr-4 default-table">
+                        <thead className="border-b-2">
+                            <tr>
+                                <th>Email</th>
+                                <th>First name</th>
+                                <th>Last name</th>
+                                <th>Registration datetime</th>
+                                <th>Registered lock</th>
                             </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            {userList.map((user: User, index: number) => {
+                                const formattedTime = formatEpochTime(new Date(user.regDate));
+                                return (
+                                    <tr className="border-b-2 border-x-2" key={index}>
+                                        <td className="border-x-2">{user.email}</td>
+                                        <td className="border-x-2">{user.firstName}</td>
+                                        <td className="border-x-2">{user.lastName}</td>
+                                        <td className="border-x-2">{formattedTime.date} {formattedTime.time}</td>
+                                        <td className="border-x-2">{user.lockId}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                    <div className="flex justify-center ">
+                        <ul className="flex list-none">
+                            {Array.from({ length: totalPages }, (_, index) => (
+                                <li key={index} className="">
+                                    <button
+                                        onClick={() => handlePageClick(index + 1)}
+                                        className={`px-3 py-1 ${currentPage === (index + 1) ? 'bg-red-600 text-white' : 'bg-gray-300 text-black'}`}>
+                                        {index + 1}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            ) : (
+                <Loading />
+            )}
         </div>
     );
 }
 
 
+
+// Should be moved to cleanup this file
 export function LockTableItem() {
     const [lockList, setLockList] = useState<Lock[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [ip, setIp] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit: number = PAGINATION_LIMIT;
+
+
+    useEffect(() => {
+        async function fetchLocks() {
+            setLoading(true);
+            try {
+                const offset = (currentPage - 1) * limit;
+                const res = await fetch(`http://localhost:4000/locks?offset=${offset}&limit=${limit}`, {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    throw new Error('Failed to fetch users');
+                }
+                const data = await res.json();
+                const locks: Lock[] = data.locks || [];
+                setLockList(locks);
+                setTotalPages(Math.ceil(data.totalItems / limit));
+                setLoading(false);
+            } catch (err: any) {
+                setError(err.message);
+                setLoading(false);
+            }
+        }
+
+        fetchLocks();
+    }, [currentPage]);
+
+
+    const handlePageClick = (page: number) => {
+        setCurrentPage(page);
+    };
 
 
     async function OpenClose(mode: string, id: number) {
@@ -343,21 +403,6 @@ export function LockTableItem() {
                 'Content-Type': 'application/json',
             },
         });
-    }
-
-
-    async function getLocks(): Promise<Lock[]> {
-        const res = await fetch(`http://${SERVER_IP}:${PORT}/locks`, {
-            method: 'GET',
-            credentials: 'include',
-        });
-        if (!res.ok) {
-            throw new Error('Failed to fetch locks');
-        }
-        const data: Record<string, Lock> = await res.json();
-        const locks: Lock[] = Object.values(data);
-
-        return locks;
     }
 
 
@@ -381,20 +426,6 @@ export function LockTableItem() {
         }
     }
 
-    useEffect(() => {
-        async function fetchLocks() {
-            try {
-                const lock: Lock[] = await getLocks();
-                setLockList(lock);
-                setLoading(false);
-            } catch (err: any) {
-                setError(err.message);
-                setLoading(false);
-            }
-        }
-        fetchLocks();
-    }, []);
-
 
     function changeOpenCloseText(button: HTMLButtonElement, mode: string, id: number) {
         try {
@@ -411,16 +442,13 @@ export function LockTableItem() {
     }
 
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
-
     return (
-        <div className="flex flex-col gap-1 mt-1 rounded-md border border-red-600" >
+        <div className="flex flex-col mt-1 rounded-md border border-red-600" >
             <div className="w-full flex flex-row bg-red-600 items-center text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent">
                 <div className="flex-grow text-center">
                     Locks
                 </div>
-                <div className="h-full rounded-md rounded-l-none flex flex-col items-center bg-white border-0 border-secondary-border border-l-1">
+                <div className="rounded-md rounded-l-none flex flex-col items-center bg-white border-0 border-secondary-border border-l-1">
                     <label htmlFor="ip" className="font-semibold text-text text-lg">Register new lock</label>
                     <form onSubmit={handlePost} className="flex relative">
                         <input
@@ -442,36 +470,51 @@ export function LockTableItem() {
                     </form>
                 </div>
             </div>
-            <table className="text-center mt-2 pr-4">
-                <thead className="border-b-2">
-                    <tr>
-                        <th>Lock ID</th>
-                        <th>IP</th>
-                        <th>Lock status</th>
-                        <th>Registered user</th>
-                        <th>Open/close</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {lockList.map((lock: Lock, index: number) => {
-                        return (
-                            <tr className="border-b-2" key={index}>
-                                <td>{lock.id}</td>
-                                <td>{lock.ip}</td>
-                                <td>{lock.status}</td>
-                                <td>{lock.email}</td>
-                                <td>
-                                    {
-                                        (lock.status === 0)
-                                            ? <button onClick={(event) => changeOpenCloseText(event.currentTarget as HTMLButtonElement, 'lock', lock.id)} value={"test"}>Close</button>
-                                            : <button onClick={(event) => changeOpenCloseText(event.currentTarget as HTMLButtonElement, 'unlock', lock.id)} value={"test"}>Open</button>
-                                    }
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
-        </div>
+            <div className="table-container">
+                <table className="text-center pr-4  default-table">
+                    <thead className="border-b-2">
+                        <tr>
+                            <th>Lock ID</th>
+                            <th>IP</th>
+                            <th>Lock status</th>
+                            <th>Registered user</th>
+                            <th>Open/close</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {lockList.map((lock: Lock, index: number) => {
+                            return (
+                                <tr className="border-b-2" key={index}>
+                                    <td>{lock.id}</td>
+                                    <td>{lock.ip}</td>
+                                    <td>{lock.status}</td>
+                                    <td>{lock.email}</td>
+                                    <td>
+                                        {
+                                            (lock.status === 0)
+                                                ? <button onClick={(event) => changeOpenCloseText(event.currentTarget as HTMLButtonElement, 'lock', lock.id)} value={"test"}>Close</button>
+                                                : <button onClick={(event) => changeOpenCloseText(event.currentTarget as HTMLButtonElement, 'unlock', lock.id)} value={"test"}>Open</button>
+                                        }
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+                <div className="flex justify-center">
+                    <ul className="flex list-none">
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <li key={index} className="">
+                                <button
+                                    onClick={() => handlePageClick(index + 1)}
+                                    className={`px-3 py-1 ${currentPage === (index + 1) ? 'bg-red-600 text-white' : 'bg-gray-300 text-black'}`}>
+                                    {index + 1}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+        </div >
     );
 }
