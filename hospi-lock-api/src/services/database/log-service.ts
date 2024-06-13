@@ -6,7 +6,7 @@ import { RedisClientDb1 } from "./database-service";
  */
 
 export default class LogService {
-    
+
     /**
      * Creates a log storing login attempt information
      * @param email represent the user
@@ -90,22 +90,44 @@ export default class LogService {
             return [];
         }
 
-        console.log({message: `Fetching logs with offset: ${offset}, limit: ${limit}`});
-        
+        console.log({ message: `Fetching logs with offset: ${offset}, limit: ${limit}` });
 
-        const data = await RedisClientDb1.zRange('login_logs', offset, limit);
+        try {
 
-        const deserializedData: Log[] = data.map(item => {
-            const parsedItem = JSON.parse(item);
-            return {
-                timestamp: parsedItem.timestamp,
-                email: parsedItem.email,
-                ip: parsedItem.ip,
-                success: parsedItem.success
-            };
-        });
+            const data = await RedisClientDb1.zRange('login_logs', offset, limit);
 
-        return deserializedData;
+            const deserializedData: Log[] = data.map(item => {
+                const parsedItem = JSON.parse(item);
+                return {
+                    timestamp: parsedItem.timestamp,
+                    email: parsedItem.email,
+                    ip: parsedItem.ip,
+                    success: parsedItem.success
+                };
+            });
+
+            return deserializedData;
+
+        } catch (error) {
+            console.log('Failed to retrieve login logs. No database connection');
+            return [];
+        }
+    }
+
+
+    /**
+     * Gets the total count of login logs
+     * @returns the count
+     */
+    
+    public async getSigninLogsCountAsync(): Promise<number> {
+        try {
+            const count = await RedisClientDb1.zCard('login_logs');
+            return count;
+        } catch (error) {
+            console.log('Failed to get login_logs count');
+            return 0;
+        }
     }
 
 
@@ -176,30 +198,50 @@ export default class LogService {
      */
 
     public async getPartialLockingLogsAsync(offset: number, limit: number): Promise<Log[]> {
-        
+
         limit += offset - 1;
 
         if (offset > limit) {
             return [];
         }
 
-        console.log({message: `Fetching logs with offset: ${offset}, limit: ${limit}`});
+        console.log({ message: `Fetching logs with offset: ${offset}, limit: ${limit}` });
 
-        const data = await RedisClientDb1.zRange('lock_logs', offset, limit);
+        try {
+            const data = await RedisClientDb1.zRange('lock_logs', offset, limit);
 
-        const deserializedData: Log[] = data.map(item => {
-            const parsedData = JSON.parse(item);
-            return {
-                timestamp: parsedData.timestamp,
-                ip: parsedData.ip,
-                status: parsedData.status,
-            };
-        });
+            const deserializedData: Log[] = data.map(item => {
+                const parsedData = JSON.parse(item);
+                return {
+                    timestamp: parsedData.timestamp,
+                    ip: parsedData.ip,
+                    status: parsedData.status,
+                };
+            });
 
-        return deserializedData;
+            return deserializedData;
+        } catch (error) {
+            console.log('Failed to retrieve lock logs. No database connection');
+            return [];
+        }
     }
 
-    
+    /**
+     * Gets the total count of Lock logs
+     * @returns the count
+     */
+
+    public async getLockLogsCountAsync(): Promise<number> {
+        try {
+            const count: number = await RedisClientDb1.zCard('lock_logs');
+            return count;
+        } catch (error) {
+            console.log('Failed to get count for lock_logs');
+            return 0;
+        }
+    }
+
+
     /**
      * Parses the ip if it is in ipv6 format
      * @param ip 

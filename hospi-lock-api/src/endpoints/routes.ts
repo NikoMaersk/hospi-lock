@@ -428,7 +428,12 @@ routes.get('/logs/lock', authService.verifyToken, authService.checkRole(Role.ADM
       logRequest = await logService.getAllLockingLogsAsync();
     }
 
-    return res.status(200).json(logRequest);
+    const count: number = await logService.getLockLogsCountAsync();
+
+    return res.status(200).json({
+      totalItems: count,
+      logs: logRequest
+    });
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);
@@ -452,7 +457,12 @@ routes.get('/logs/signin', authService.verifyToken, authService.checkRole(Role.A
       logRequest = await logService.getAllSigninLogsAsync();
     }
 
-    return res.status(200).json(logRequest);
+    const count: number = await logService.getSigninLogsCountAsync();
+
+    return res.status(200).json({
+      totalItems: count,
+      logs: logRequest
+    });
   } catch (error) {
     const errorMessage = 'Internal server error';
     console.error(`${errorMessage} : `, error);
