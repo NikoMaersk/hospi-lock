@@ -88,10 +88,24 @@ routes.get('/users/:email', authService.verifyToken, async (req, res) => {
 
 // Get all users
 routes.get('/users', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
-  try {
-    const userRecords = await userService.getAllUsersAsync();
+  const offset: number = parseInt(req.query.offset as string);
+  const limit: number = parseInt(req.query.limit as string);
 
-    return res.status(200).json(userRecords);
+  try {
+    let allUsers: User[] = [];
+
+    if (offset || limit) {
+      allUsers = await userService.getPartialUsersAsync(offset, limit);
+    } else {
+      allUsers = await userService.getAllUsersAsync();
+    }
+
+    const count: number = await userService.getUserCountAsync();
+
+    return res.status(200).json({
+      totalItems: count,
+      users: allUsers
+    });
   } catch (error) {
     const errorMessage = 'Error fetching users';
     console.error(`${errorMessage} : `, error);
@@ -257,10 +271,24 @@ routes.post('/locks', authService.verifyToken, authService.checkRole(Role.ADMIN)
 
 // Get all locks
 routes.get('/locks', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
-  try {
-    const lockRecords = await lockService.getAllLocksAsync();
+  const offset: number = parseInt(req.query.offset as string);
+  const limit: number = parseInt(req.query.limit as string);
 
-    return res.status(200).json(lockRecords);
+  try {
+    let allLocks: Lock[] = [];
+
+    if (offset || limit) {
+      allLocks = await lockService.getPartialLocksAsync(offset, limit);
+    } else {
+      allLocks = await lockService.getAllLocksAsync();
+    }
+
+    const count: number = await lockService.getUserCountAsync();
+
+    return res.status(200).json({
+      totalItems: count,
+      locks: allLocks
+    });
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');
@@ -448,7 +476,6 @@ routes.get('/logs/signin', authService.verifyToken, authService.checkRole(Role.A
   const limit: number = parseInt(req.query.limit as string);
 
   try {
-
     let logRequest: Log[] = null;
 
     if (offset || limit) {
@@ -484,7 +511,6 @@ routes.post('/logs', async (req, res) => {
   }
 
   try {
-
     const logRequest: LogRequest = await logService.logLockingMessageAsync(timestamp, ip, status);
 
     if (!logRequest.success) {
@@ -517,6 +543,7 @@ routes.post('/admin/auth', authService.verifyToken, authService.checkRole(Role.A
 
   return res.status(200).json(adminWithoutPassword);
 });
+
 
 
 routes.post('/admin/unlock/:id', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {

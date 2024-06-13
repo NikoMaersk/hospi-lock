@@ -31,8 +31,6 @@ export default class LockService {
             if (lock.email) {
                 lock.email = lock.email.toLowerCase();
 
-                
-
                 const authResult = await this.userService.checkExistenceAsync(lock.email);
 
                 if (!authResult.success) {
@@ -44,11 +42,16 @@ export default class LockService {
                 }
             }
 
-            const newId = await RedisClientDb0.incr('lock_id_counter');
-            lock.id = newId.toString();
+            const lockId = await RedisClientDb0.incr('lock_id_counter');
+            const lockKey: string = `lock:${lockId}`;
+            lock.id = lockId.toString();
             lock.status = 0;
 
-            await RedisClientDb0.hSet(`lock:${lock.id}`, lock);
+            await RedisClientDb0.zAdd('lock_list', {
+                score: lockId,
+                value: lockKey
+            });
+            await RedisClientDb0.hSet(lockKey, lock);
 
             return { success: true, message: 'Lock registered', statusCode: 201, lock: lock };
         } catch (error) {
@@ -59,13 +62,13 @@ export default class LockService {
 
     /**
      * Retrieves all locks from the database
-     * @returns dictionary storing the retrieved locks
+     * @returns array storing the retrieved locks
      */
 
-    public async getAllLocksAsync(): Promise<Record<string, Lock>> {
+    public async getAllLocksAsync(): Promise<Lock[]> {
         try {
             const keys = await RedisClientDb0.keys('lock:*')
-            const allHashes: Record<string, Lock> = {};
+            const allLocks: Lock[] = [];
 
             const promises = keys.map(async (key) => {
                 const hashValues = await RedisClientDb0.hGetAll(key);
@@ -77,18 +80,60 @@ export default class LockService {
                     email: hashValues.email
                 };
 
-                allHashes[key] = tempLock;
+                allLocks.push(tempLock);
             });
 
             await Promise.all(promises);
 
-            return allHashes;
+            return allLocks;
         } catch (error) {
             console.error('Error fetching all users: ', error);
-            throw new Error('Failed to fetch all users');
+            return [];
         }
     }
 
+
+    /**
+     * Retrieves partial locks
+     * @param offset where to start
+     * @param limit how many locks
+     * @returns array of logs
+     */
+
+    public async getPartialLocksAsync(offset: number, limit: number): Promise<Lock[]> {
+        limit += offset - 1;
+
+        if (offset > limit) {
+            return [];
+        }
+
+        console.log({ message: `Fetching users with offset: ${offset}, limit: ${limit}` });
+
+        try {
+            const lockKeys = await RedisClientDb0.zRange('lock_list', offset, limit);
+            const locks: Lock[] = await Promise.all(lockKeys.map(key => RedisClientDb0.hGetAll(key)));
+
+            return locks;
+        } catch (error) {
+            console.log('Failed to retrieve partial locks. No database connection');
+            return [];
+        }
+    }
+
+
+    /**
+     * Gets the lock count from the database
+     * @returns number of locks
+     */
+    public async getUserCountAsync(): Promise<number> {
+        try {
+            const count = await RedisClientDb0.zCard('lock_list');
+            return count;
+        } catch (error) {
+            console.log('Failed to get lock count');
+            return 0;
+        }
+    }
 
     /**
      * Retrieves a Lock by the Id

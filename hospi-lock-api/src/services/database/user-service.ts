@@ -8,7 +8,52 @@ const bcrypt = require('bcryptjs');
  * Handles CRUD operation relevant for the User
  */
 export default class UserService implements IRoleService<User> {
-    
+
+    /**
+     * Creates a user in the database
+     * @param user to be created
+     * @returns success status
+     */
+
+    public async addUserAsync(user: User): Promise<UserRequest> {
+        const lowerCaseEmail = user.email.toLowerCase();
+        const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
+
+        const userAlreadyExists = tempUser && Object.keys(tempUser).length > 0;
+
+        if (userAlreadyExists) {
+            return { success: false, message: 'User already exists', statusCode: 409 };
+        }
+
+        let now = new Date();
+        const salt: string = await bcrypt.genSalt();
+        const hashedPassword: string = await bcrypt.hash(user.password, salt);
+
+        const capitalizeFirstName: string = capitalizeFirstLetter(user.firstName);
+        const capitalizedLastName: string = capitalizeFirstLetter(user.lastName);
+
+        const newUser = {
+            email: lowerCaseEmail,
+            password: hashedPassword,
+            firstName: capitalizeFirstName,
+            lastName: capitalizedLastName,
+            regDate: now.toISOString(),
+            lockId: user.lockId || "",
+        }
+
+        const userKey: string = `user:${lowerCaseEmail}`;
+        const userId = await RedisClientDb0.incr('user_id_counter');
+
+        await RedisClientDb0.hSet(userKey, newUser);
+        await RedisClientDb0.zAdd('user_list', {
+            score: userId,
+            value: userKey
+        });
+
+        return { success: true, message: 'User created', statusCode: 201 };
+    }
+
+
     /**
      * Retrieves a user by email
      * @param email email to retrieve user by
@@ -34,16 +79,16 @@ export default class UserService implements IRoleService<User> {
         return { success: true, message: "User fetched", statusCode: 200, user: user };
     }
 
-    
+
     /**
      * Retrieves all stored users
-     * @returns dictionary with users
+     * @returns array with users
      */
 
-    public async getAllUsersAsync(): Promise<Record<string, User>> {
+    public async getAllUsersAsync(): Promise<User[]> {
         try {
             const keys = await RedisClientDb0.keys("user:*");
-            const allHashes: Record<string, User> = {};
+            const allUsers: User[] = [];
 
             const promises = keys.map(async (key) => {
                 const hashValues = await RedisClientDb0.hGetAll(key);
@@ -56,15 +101,15 @@ export default class UserService implements IRoleService<User> {
                     lockId: hashValues.lockId
                 };
 
-                allHashes[key] = tempUser;
+                allUsers.push(tempUser);
             });
 
             await Promise.all(promises);
 
-            return allHashes;
+            return allUsers;
         } catch (error) {
             console.error('Error fetching all users: ', error);
-            throw new Error('Failed to fetch all users');
+            return [];
         }
     }
 
@@ -72,70 +117,43 @@ export default class UserService implements IRoleService<User> {
     /**
      * Retrieves partial user
      * @param amount number of users to retrieve
-     * @returns dictionary with users
+     * @returns array of users
      */
 
-    public async getPartialUsersAsync(amount: number): Promise<Record<string, User>> {
-        const cursor = 0;
-        const pattern = 'user:*';
-        const countAmount = amount;
+    public async getPartialUsersAsync(offset: number, limit: number): Promise<User[]> {
 
-        const keys = await RedisClientDb0.scan(cursor, 'MATCH', pattern, 'COUNT', countAmount);
-        const allHashes: Record<string, User> = {};
+        limit += offset - 1;
 
-        const promises = keys.map(async (key) => {
-            const hashValues = await RedisClientDb0.hGetAll(key);
+        if (offset > limit) {
+            return [];
+        }
 
-            const tempUser: User = {
-                email: hashValues.email,
-                firstName: hashValues.firstName,
-                lastName: hashValues.lastName,
-                date: hashValues.date,
-                lockId: hashValues.lockId
-            }
+        console.log({ message: `Fetching users with offset: ${offset}, limit: ${limit}` });
 
-            allHashes[key] = tempUser;
-        });
+        try {
+            const userKeys = await RedisClientDb0.zRange('user_list', offset, limit);
+            const users: User[] = await Promise.all(userKeys.map(key => RedisClientDb0.hGetAll(key)));
 
-        await Promise.all(promises);
-
-        return allHashes;
+            return users;
+        } catch (error) {
+            console.log('Failed to retrieve partial users. No database connection');
+            return [];
+        }
     }
 
 
     /**
-     * Creates a user in the database
-     * @param user to be created
-     * @returns success status
+     * Gets the user count from the database
+     * @returns number of users
      */
-
-    public async addUserAsync(user: User): Promise<UserRequest> {
-        const lowerCaseEmail = user.email.toLowerCase();
-        const tempUser = await RedisClientDb0.hGetAll(`user:${lowerCaseEmail}`);
-
-        const userAlreadyExists = tempUser && Object.keys(tempUser).length > 0;
-
-        if (userAlreadyExists) {
-            return { success: false, message: 'User already exists', statusCode: 409 };
+    public async getUserCountAsync(): Promise<number> {
+        try {
+            const count = await RedisClientDb0.zCard('user_list');
+            return count;
+        } catch (error) {
+            console.log('Failed to get user count');
+            return 0;
         }
-
-        let now = new Date();      
-        const salt: string = await bcrypt.genSalt();
-        const hashedPassword: string = await bcrypt.hash(user.password, salt);
-
-        const capitalizeFirstName: string = capitalizeFirstLetter(user.firstName);
-        const capitalizedLastName: string = capitalizeFirstLetter(user.lastName);
-
-        await RedisClientDb0.hSet(`user:${lowerCaseEmail}`, {
-            email: lowerCaseEmail,
-            password: hashedPassword,
-            firstName: capitalizeFirstName,
-            lastName: capitalizedLastName,
-            regDate: now.toISOString(),
-            lockId: user.lockId || "",
-        });
-
-        return { success: true, message: 'User created', statusCode: 201 };
     }
 
 
