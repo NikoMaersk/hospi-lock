@@ -25,9 +25,11 @@ export default function Sidebar() {
             <Link href="/admin/logs" passHref>
                 <SmallsidebarItem Icon={ScrollText} title="Logs" />
             </Link>
-            <Link href="/admin/analytics" passHref>
-                <SmallsidebarItem Icon={LineChart} title="Analytics" />
-            </Link>
+            {/*
+                <Link href="/admin/analytics" passHref>
+                    <SmallsidebarItem Icon={LineChart} title="Analytics" />
+                </Link>
+            */}
         </aside>
     );
 }
