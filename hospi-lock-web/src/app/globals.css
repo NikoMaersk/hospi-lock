@@ -35,3 +35,36 @@ body {
     text-wrap: balance;
   }
 }
+
+*::-webkit-scrollbar {
+  @apply bg-transparent w-2;
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-gray-500 rounded-full;
+}
+
+.scrollbar-hidden::-webkit-scrollbar-thumb {
+  @apply bg-transparent
+}
+
+.scrollbar-hidden:hover::-webkit-scrollbar-thumb {
+  @apply bg-gray-900
+}
+
+.scrollbar-hidden:hover::-webkit-scrollbar-track {
+  @apply bg-gray-800
+}
+
+.scrollbar-hidden::-webkit-scrollbar-track {
+  @apply bg-transparent
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; 
+}
