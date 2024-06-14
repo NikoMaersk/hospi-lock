@@ -301,7 +301,7 @@ export function UserTableItem() {
 
     return (
         <div className="flex flex-col mt-1 rounded-md shadow-md">
-            <div className="w-full inline text-center pb-1 bg-red-600 text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent ">
+            <div className="w-full inline text-center pb-1 bg-red-600 text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent rounded-md">
                 Users
             </div>
             {!loading ? (
