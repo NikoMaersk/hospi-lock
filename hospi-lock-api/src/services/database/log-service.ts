@@ -17,9 +17,9 @@ export default class LogService {
 
     public async logSigninMessageAsync(email: string, authenticationStatus: boolean, ip: string): Promise<LogRequest> {
         try {
-            const timestamp = Date.now();
+            const timestamp: number = Math.floor(Date.now() / 1000);
 
-            const parsedIp = LogService.parseIPAddress(ip);
+            const parsedIp: string = LogService.parseIPAddress(ip);
 
             const logEntry = {
                 timestamp: timestamp.toString(),
@@ -28,7 +28,7 @@ export default class LogService {
                 success: authenticationStatus
             }
 
-            const logEntrySerialized = JSON.stringify(logEntry);
+            const logEntrySerialized: string = JSON.stringify(logEntry);
 
             await RedisClientDb1.zAdd('login_logs', [
                 {
@@ -50,7 +50,6 @@ export default class LogService {
      * Retrieves all sign in logs
      * @returns array of logs
      */
-
 
     public async getAllSigninLogsAsync(): Promise<Log[]> {
 
@@ -139,10 +138,13 @@ export default class LogService {
      * @returns 
      */
 
-    public async logLockingMessageAsync(timestamp: string, ip: string, status: string): Promise<LogRequest> {
+    public async logLockingMessageAsync(timestamp: number, ip: string, status: string): Promise<LogRequest> {
         try {
+
+            const epochTimeSec = Math.floor(timestamp / 1000).toString();
+
             const logEntry = {
-                timestamp: timestamp,
+                timestamp: epochTimeSec,
                 ip: ip,
                 status: status
             }
@@ -150,7 +152,7 @@ export default class LogService {
             const logEntrySerialized = JSON.stringify(logEntry);
 
             await RedisClientDb1.zAdd('lock_logs', {
-                score: timestamp,
+                score: epochTimeSec,
                 value: logEntrySerialized,
             });
 

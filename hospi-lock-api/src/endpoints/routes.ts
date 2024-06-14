@@ -283,7 +283,7 @@ routes.get('/locks', authService.verifyToken, authService.checkRole(Role.ADMIN),
       allLocks = await lockService.getAllLocksAsync();
     }
 
-    const count: number = await lockService.getUserCountAsync();
+    const count: number = await lockService.getLockCountAsync();
 
     return res.status(200).json({
       totalItems: count,
@@ -511,7 +511,7 @@ routes.post('/logs', async (req, res) => {
   }
 
   try {
-    const logRequest: LogRequest = await logService.logLockingMessageAsync(timestamp, ip, status);
+    const logRequest: LogRequest = await logService.logLockingMessageAsync(parseInt(timestamp), ip, status);
 
     if (!logRequest.success) {
       return res.status(500).send(logRequest.message)
@@ -546,6 +546,7 @@ routes.post('/admin/auth', authService.verifyToken, authService.checkRole(Role.A
 
 
 
+// Sends a unlock request to a specific lock
 routes.post('/admin/unlock/:id', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const { id } = req.params;
 
@@ -568,6 +569,7 @@ routes.post('/admin/unlock/:id', authService.verifyToken, authService.checkRole(
 });
 
 
+// Sends a lock request to a specific lock
 routes.post('/admin/lock/:id', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
   const { id } = req.params;
 
@@ -579,6 +581,65 @@ routes.post('/admin/lock/:id', authService.verifyToken, authService.checkRole(Ro
     }
 
     return res.status(200).send('OK');
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+});
+
+
+// Gets total registered user count
+routes.get('/users/stats/count', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
+
+  try {
+    const count: number = await userService.getUserCountAsync();
+    return res.status(200).json({
+      totalItems: count
+    })
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+});
+
+// Gets total registered lock count
+routes.get('/locks/stats/count', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
+
+  try {
+    const count: number = await lockService.getLockCountAsync();
+    return res.status(200).json({
+      totalItems: count
+    })
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+});
+
+
+// Gets total registered signin logs count
+routes.get('/logs/signin/stats/count', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
+
+  try {
+    const count: number = await logService.getSigninLogsCountAsync();
+    return res.status(200).json({
+      totalItems: count
+    })
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('A server error occurred');
+  }
+});
+
+
+// Gets total registered lock log count
+routes.get('/logs/lock/stats/count', authService.verifyToken, authService.checkRole(Role.ADMIN), async (req, res) => {
+
+  try {
+    const count: number = await logService.getLockLogsCountAsync();
+    return res.status(200).json({
+      totalItems: count
+    })
   } catch (error) {
     console.error('Error:', error);
     return res.status(500).send('A server error occurred');

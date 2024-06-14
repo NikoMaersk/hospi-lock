@@ -125,7 +125,7 @@ export default class LockService {
      * Gets the lock count from the database
      * @returns number of locks
      */
-    public async getUserCountAsync(): Promise<number> {
+    public async getLockCountAsync(): Promise<number> {
         try {
             const count = await RedisClientDb0.zCard('lock_list');
             return count;

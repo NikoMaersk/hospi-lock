@@ -42,11 +42,11 @@ export default class UserService implements IRoleService<User> {
         }
 
         const userKey: string = `user:${lowerCaseEmail}`;
-        const userId = await RedisClientDb0.incr('user_id_counter');
+        const epochTime = Math.floor(now.getTime() / 1000);
 
         await RedisClientDb0.hSet(userKey, newUser);
         await RedisClientDb0.zAdd('user_list', {
-            score: userId,
+            score: epochTime,
             value: userKey
         });
 
@@ -132,7 +132,20 @@ export default class UserService implements IRoleService<User> {
 
         try {
             const userKeys = await RedisClientDb0.zRange('user_list', offset, limit);
-            const users: User[] = await Promise.all(userKeys.map(key => RedisClientDb0.hGetAll(key)));
+            const users: User[] = await Promise.all(userKeys.map(async (key) =>  {
+
+                const hashValues = await RedisClientDb0.hGetAll(key);
+
+                const user: User = {
+                    email: hashValues.email,
+                    firstName: hashValues.firstName,
+                    lastName: hashValues.lastName,
+                    date: hashValues.regDate,
+                    lockId: hashValues.lockId
+                };
+
+                return user;
+            }));
 
             return users;
         } catch (error) {
