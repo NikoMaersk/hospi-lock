@@ -131,7 +131,8 @@ function SigninLogChild() {
                         </thead>
                         <tbody>
                             {logList.map((log: Log, index: number) => {
-                                const formattedTime = formatEpochTime(new Date(parseInt(log.timestamp)));
+                                const parsedTime: number = parseInt(log.timestamp) * 1000;
+                                const formattedTime = formatEpochTime(new Date(parsedTime));
                                 return (
                                     <tr className="border-b-2 border-x-2" key={index}>
                                         <td className="border-x-2" >{formattedTime.date}</td>
@@ -221,7 +222,8 @@ function LockLogChild() {
                         </thead>
                         <tbody>
                             {lockLogList.map((log: LockLog, index: number) => {
-                                const formattedTime = formatEpochTime(new Date(parseInt(log.timestamp)));
+                                const parsedTime: number = parseInt(log.timestamp) * 1000;
+                                const formattedTime = formatEpochTime(new Date(parsedTime));
                                 return (
                                     <tr className="border-b-2 border-x-2" key={index}>
                                         <td className="border-x-2" >{formattedTime.date}</td>
