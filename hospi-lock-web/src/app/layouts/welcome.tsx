@@ -15,7 +15,7 @@ export default function Welcome() {
           </h1>
           <h1 className="tracking-tight inline font-semibold from-red-400 to-red-600 text-[2.5rem] lg:text-4xl bg-clip-text text-transparent bg-gradient-to-b">
             HospiLock&nbsp;
-          </h1>
+          </h1> 
           <h1 className='tracking-tight inline font-semibold text-[2.5rem] lg:text-4xl'>
             admin app
           </h1>

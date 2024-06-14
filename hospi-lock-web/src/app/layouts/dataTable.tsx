@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, HtmlHTMLAttributes } from "react";
+import React, { useState, useEffect } from "react";
 import { formatEpochTime } from "../../helper/formatTime";
 import { Lock, LockIcon, User } from "lucide-react";
 import Loading from "../../components/loading";
@@ -29,7 +29,7 @@ interface User {
     email: string;
     firstName: string;
     lastName: string;
-    regDate: string;
+    date: string;
     lockId: string;
 }
 
@@ -47,8 +47,8 @@ export function LogTableItem() {
     const [isLoginCurrent, setIsLoginCurrent] = useState(true);
 
     return (
-        <div className="flex flex-col gap-1 mt-0.5 rounded-md border border-red-600">
-            <div className="w-full inline text-center pb-1 bg-red-600 
+        <div className="flex flex-col gap-1 mt-0.5 rounded-md shadow-md">
+            <div className="w-full inline text-center pb-1 bg-red-600 rounded-md
             text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent">
                 Logs
             </div>
@@ -269,7 +269,7 @@ export function UserTableItem() {
             setLoading(true);
             try {
                 const offset = (currentPage - 1) * limit;
-                const res = await fetch(`http://localhost:4000/users?offset=${offset}&limit=${limit}`, {
+                const res = await fetch(`http://${SERVER_IP}:${PORT}/users?offset=${offset}&limit=${limit}`, {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -298,7 +298,7 @@ export function UserTableItem() {
     if (error) return <div>Error: {error}</div>;
 
     return (
-        <div className="flex flex-col mt-1 rounded-md border border-red-600">
+        <div className="flex flex-col mt-1 rounded-md shadow-md">
             <div className="w-full inline text-center pb-1 bg-red-600 text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent ">
                 Users
             </div>
@@ -316,7 +316,7 @@ export function UserTableItem() {
                         </thead>
                         <tbody>
                             {userList.map((user: User, index: number) => {
-                                const formattedTime = formatEpochTime(new Date(user.regDate));
+                                const formattedTime = formatEpochTime(new Date(user.date));
                                 return (
                                     <tr className="border-b-2 border-x-2" key={index}>
                                         <td className="border-x-2">{user.email}</td>
@@ -368,7 +368,7 @@ export function LockTableItem() {
             setLoading(true);
             try {
                 const offset = (currentPage - 1) * limit;
-                const res = await fetch(`http://localhost:4000/locks?offset=${offset}&limit=${limit}`, {
+                const res = await fetch(`http://${SERVER_IP}:${PORT}/locks?offset=${offset}&limit=${limit}`, {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -443,12 +443,12 @@ export function LockTableItem() {
 
 
     return (
-        <div className="flex flex-col mt-1 rounded-md border border-red-600" >
-            <div className="w-full flex flex-row bg-red-600 items-center text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent">
+        <div className="flex flex-col mt-1 rounded-md shadow-md" >
+            <div className="w-full flex flex-row rounded-md bg-red-600 items-center text-white tracking-tight font-semibold text-[2.5rem] lg:text-4xl text-transparent">
                 <div className="flex-grow text-center">
                     Locks
                 </div>
-                <div className="rounded-md rounded-l-none flex flex-col items-center bg-white border-0 border-secondary-border border-l-1">
+                <div className="rounded-md rounded-l-none rounded-r-sm flex flex-col items-center bg-white border-0 border-secondary-border border-l-1">
                     <label htmlFor="ip" className="font-semibold text-text text-lg">Register new lock</label>
                     <form onSubmit={handlePost} className="flex relative">
                         <input

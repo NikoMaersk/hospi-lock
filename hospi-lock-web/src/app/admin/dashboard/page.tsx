@@ -1,12 +1,12 @@
 import { AuthProvider } from '@/helper/authContext';
 import AdminComponent from '../../layouts/adminComponent';
-import Welcome from '@/app/layouts/welcome';
+import Dashboard from '@/app/layouts/dashboard';
 
 export default function AdminPage() {
     return (
         <AuthProvider>
             <AdminComponent>
-                <Welcome />
+                <Dashboard />
             </AdminComponent>
         </AuthProvider>
     );
